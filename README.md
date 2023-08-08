@@ -1,6 +1,6 @@
 ## Updates API demo
 
-https://github.com/expo/UpdatesAPIDemo/assets/6577821/87e42c2f-d15a-42bc-a430-304b5f0d0e4f
+https://github.com/expo/UpdatesAPIDemo/assets/6577821/a3a23f7d-bce6-4f75-b953-d3105deb8601
 
 App to test out
 
