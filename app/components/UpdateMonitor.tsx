@@ -1,5 +1,5 @@
 import { useUpdates, checkForUpdateAsync, fetchUpdateAsync, reloadAsync } from "expo-updates"
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { StyleProp, View, ViewStyle } from "react-native"
 import { ExpoDemoCard } from "./ExpoDemoCard"
 import {
@@ -13,8 +13,13 @@ import {
 } from "../utils/updates"
 import { dateDifferenceInMilliSeconds } from "../utils/updates/dateUtils"
 
-// Wrap async expo-updates functions (with useUpdates(), no need to wait for results or errors)
-const checkForUpdate = () => checkForUpdateAsync().catch((_error) => {})
+// Wrap async expo-updates functions (errors are surfaced in useUpdates() hook so can be ignored)
+const checkForUpdate: () => Promise<string | undefined> = async () => {
+  try {
+    const result = await checkForUpdateAsync()
+    return result.reason
+  } catch (_error) {}
+}
 const downloadUpdate = () => fetchUpdateAsync().catch((_error) => {})
 const runUpdate = () => reloadAsync().catch((_error) => {})
 
@@ -53,6 +58,8 @@ export const UpdateMonitor: (props: UpdateMonitorProps) => JSX.Element = ({
 
   const monitorInterval = updateCheckInterval
 
+  const [noUpdateReason, setNoUpdateReason] = useState<string | undefined>(undefined)
+
   const needsUpdateCheck = () =>
     dateDifferenceInMilliSeconds(new Date(), lastCheckForUpdateTime) > monitorInterval
 
@@ -68,7 +75,7 @@ export const UpdateMonitor: (props: UpdateMonitorProps) => JSX.Element = ({
   // The effect interval should be smaller than monitorInterval
   useInterval(() => {
     if (appState === "active" && needsUpdateCheck()) {
-      checkForUpdate()
+      checkForUpdate().then((reason) => setNoUpdateReason(reason))
     }
   }, monitorInterval / 4)
 
@@ -95,7 +102,7 @@ export const UpdateMonitor: (props: UpdateMonitorProps) => JSX.Element = ({
 
   const description = `${availableUpdateDescription(updatesSystem)} ${errorDescription(
     updatesSystem,
-  )}`
+  )} ${isUpdateAvailable ? "" : noUpdateReason ?? ""}`
 
   // Actions: only show actions that make sense based on the current state
   const actions: { label: string; onPress: () => void }[] = []
