@@ -7,6 +7,7 @@ App to test out
 - Features provided by `expo-updates`
 - Example solutions for some use cases
 - Uses the [new forthcoming JS API](https://docs.expo.dev/versions/unversioned/sdk/updates/#useupdates)
+- The new experimental [expo-updates asset selection feature](./ASSETSELECTION.md)
 
 Built using the [Ignite React Native boilerplate CLI](https://github.com/infinitered/ignite)
 

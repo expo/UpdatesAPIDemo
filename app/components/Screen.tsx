@@ -160,6 +160,7 @@ function ScreenWithScrolling(props: ScreenProps) {
     <ScrollView
       {...{ keyboardShouldPersistTaps, scrollEnabled }}
       {...ScrollViewProps}
+      nestedScrollEnabled
       onLayout={(e) => {
         onLayout(e)
         ScrollViewProps?.onLayout?.(e)

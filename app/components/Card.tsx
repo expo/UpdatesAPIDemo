@@ -13,7 +13,7 @@ import { Text, TextProps } from "./Text"
 
 type Presets = keyof typeof $containerPresets
 
-interface CardProps extends TouchableOpacityProps {
+export interface CardProps extends TouchableOpacityProps {
   /**
    * One of the different types of text presets.
    */
