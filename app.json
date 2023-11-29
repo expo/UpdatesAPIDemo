@@ -56,6 +56,10 @@
       },
       "bundler": "metro"
     },
+    "extra": {
+      "message": "",
+      "criticalIndex": 0
+    },
     "plugins": [
       "expo-localization",
       [
