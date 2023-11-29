@@ -2,14 +2,12 @@ import type { CurrentlyRunningInfo, UseUpdatesReturnType } from "expo-updates"
 
 // Access 'extra' properties from update manifests
 
-const isManifestCritical = (manifest: any) => {
-  return manifest?.extra?.expoClient?.extra?.critical ?? false
-}
-
-const isAvailableUpdateCritical = (updatesSystem: UseUpdatesReturnType) => {
-  return updatesSystem?.availableUpdate
-    ? isManifestCritical(updatesSystem?.availableUpdate.manifest)
-    : false
+const isAvailableUpdateCritical = (updatesSystem: any) => {
+  const criticalIndexCurrent =
+    updatesSystem?.currentlyRunning?.manifest?.extra?.expoClient?.extra?.criticalIndex ?? 0
+  const criticalIndexUpdate =
+    updatesSystem?.availableUpdate?.manifest?.extra?.expoClient?.extra?.criticalIndex ?? 0
+  return criticalIndexUpdate > criticalIndexCurrent
 }
 
 const manifestMessage = (manifest: any) => {
@@ -48,11 +46,9 @@ const availableUpdateTitle = (updatesSystem: UseUpdatesReturnType) => {
     return "No update soup for you in dev mode"
   }
   return updatesSystem.isUpdateAvailable
-    ? `${
-        isManifestCritical(updatesSystem.availableUpdate?.manifest)
-          ? "A critical update"
-          : "An update"
-      } ${updatesSystem.isUpdatePending ? "has been downloaded" : "is available"}`
+    ? `${isAvailableUpdateCritical(updatesSystem) ? "A critical update" : "An update"} ${
+        updatesSystem.isUpdatePending ? "has been downloaded" : "is available"
+      }`
     : "App is running the latest update"
 }
 
@@ -65,7 +61,7 @@ const availableUpdateDescription = (updatesSystem: UseUpdatesReturnType) => {
     ? ` ID: ${availableUpdate.updateId}\n` +
       ` Created: ${availableUpdate.createdAt?.toISOString() || ""}\n` +
       ` Message: ${manifestMessage(availableUpdate.manifest)}\n` +
-      ` Critical: ${isManifestCritical(availableUpdate.manifest)}\n`
+      ` Critical: ${isAvailableUpdateCritical(updatesSystem)}\n`
     : "No available update\n"
   return updateDescription
 }

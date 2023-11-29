@@ -83,13 +83,9 @@ Force quit the app, and then issue a `yarn update` command like the one above, t
 yarn update --message "Testing a critical update" --critical
 ```
 
-This adds
+This is implemented by having a counter saved in the file `.criticalIndex`. The value is added to the Expo config in the `expo.extra` section, exactly as is done for the `message` value above. If the `--critical` flag is passed into the `yarn update` script, this counter is incremented by 1.
 
-```
-  "critical": true
-```
-
-to the `extra` section of the update manifest's `expoClient` object. The demo app code looks for this custom property, and treats the update as "critical" if this property is set to true.
+The demo app code looks for this custom property, and compares it to the same property in the manifest of the currently running update (or embedded manifest). If the value has changed, the update is treated as critical.
 
 Again, click "Show monitor options", and check the checkbox near the bottom of the screen labeled "Check at 10 second intervals".
 The monitor will now show that a critical update is available.
@@ -97,6 +93,8 @@ The monitor will now show that a critical update is available.
 ![06-critical-update](./media/06-critical-update.png)
 
 Now enable the "Download and launch critical updates" toggle. On the next check for updates, the monitor will immediately download and launch the new update without manual intervention.
+
+> _Note:_ Implementing critical updates in this way ensures that if update 1 is critical, and update 2 is not, a device that does not run the app until after update 2 goes out will still see that the counter has changed, and know that a critical update has been pushed since the last time it checked for updates.
 
 ### Notes on the demo app code:
 
