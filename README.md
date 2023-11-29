@@ -59,7 +59,7 @@ _Note:_ If you are running the app for the first time, after building locally, y
 yarn update --message "Testing an update"
 ```
 
-(This runs a script that manually modifies `app.json` to add a custom `message` string property in the `extra` section, and optionally a `critical` boolean property, and then run `eas update`. Doing this results in an update manifest that contains these custom properties in the `extra` section of the `expoClient` object.)
+(This runs a script that manually modifies `app.json` to add a custom `message` string property in the `extra` section, and then runs `eas update`. Doing this results in an update manifest that contains the custom message in the `extra` section of the `expoClient` object.)
 
 Click "Show monitor options", then check the checkbox labeled "Check every 10 seconds". After a few seconds, the monitor will show at the bottom of the screen, alerting the user that an update is available, and some details about the update, including the message from `app.json`.
 
@@ -109,7 +109,7 @@ _[UpdateMonitor.tsx](./app/components/UpdateMonitor.tsx):_
 - Checks for updates using `checkForUpdateAsync()`, either at a set interval, or on app foregrounding using the React Native `AppState` API.
 - Downloads using `fetchUpdateAsync()`.
 - Uses `isUpdateAvailable`, `isUpdatePending`, and `availableUpdate` from the `useUpdates()` hook to show information on any new update available on the server, and whether it has already been downloaded.
-- Checks to see if the `critical` boolean property is set in the `extra` section of the Expo config for the update.
+- Checks to see if the update is critical (see details above).
 - If automatic download and launch of "critical" updates is enabled, downloads and launches the update.
 
 _[updateUtils.ts](./app/utils/updates/updateUtils.ts):_
