@@ -1,6 +1,4 @@
 {
-  "name": "UpdatesAPIDemo",
-  "displayName": "UpdatesAPIDemo",
   "expo": {
     "name": "UpdatesAPIDemo",
     "slug": "UpdatesAPIDemo",
@@ -20,9 +18,6 @@
       }
     },
     "jsEngine": "hermes",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "android": {
       "icon": "./assets/images/app-icon-android-legacy.png",
       "package": "com.updatesapidemo",
@@ -47,18 +42,14 @@
         "backgroundColor": "#191015"
       }
     },
-    "web": {
-      "favicon": "./assets/images/app-icon-web-favicon.png",
-      "splash": {
-        "image": "./assets/images/splash-logo-web.png",
-        "resizeMode": "contain",
-        "backgroundColor": "#191015"
-      },
-      "bundler": "metro"
-    },
     "extra": {
+      "criticalIndex": 0,
       "message": "",
-      "criticalIndex": 0
+      "updates": {
+        "assetPatternsToBeBundled": [
+          "app/includedImages/*"
+        ]
+      }
     },
     "plugins": [
       "expo-localization",

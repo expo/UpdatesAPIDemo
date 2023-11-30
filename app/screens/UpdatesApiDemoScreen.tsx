@@ -2,7 +2,7 @@ import { useUpdates } from "expo-updates"
 import { lightTheme } from "@expo/styleguide-base"
 import React, { useState } from "react"
 import { ActivityIndicator, TextStyle, View, ViewStyle } from "react-native"
-import { ExpoDemoCard, Screen, Text, UpdateMonitor } from "../components"
+import { ExpoAssets, ExpoDemoCard, Screen, Text, UpdateMonitor } from "../components"
 import { spacing } from "../theme"
 import { DocsLogo } from "../svg"
 
@@ -77,7 +77,7 @@ export function UpdatesApiDemoScreen() {
     : []
 
   return (
-    <Screen contentContainerStyle={$container} safeAreaEdges={["bottom", "top"]}>
+    <Screen preset="scroll" contentContainerStyle={$container} safeAreaEdges={["bottom", "top"]}>
       <View style={$topHeading}>
         <DocsLogo width={30} height={30} color={lightTheme.icon[expoVariant]} style={$logo} />
         <Text
@@ -100,6 +100,7 @@ export function UpdatesApiDemoScreen() {
         booleanSettings={monitorBooleanSettings}
         choiceSettings={monitorChoiceSettings}
       />
+      <ExpoAssets />
       <View style={$spacer} />
       <UpdateMonitor
         alwaysVisible={monitorAlwaysVisible}

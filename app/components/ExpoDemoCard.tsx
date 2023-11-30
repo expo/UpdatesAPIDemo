@@ -3,7 +3,7 @@ import * as React from "react"
 import { StyleProp, TextStyle, View, ViewStyle } from "react-native"
 import { spacing, typography } from "../theme"
 import { Button } from "./Button"
-import { Card } from "./Card"
+import { Card, CardProps } from "./Card"
 import { Text } from "./Text"
 import { Toggle } from "./Toggle"
 
@@ -46,12 +46,13 @@ export interface ExpoDemoCardProps {
 /**
  * Describe your component here
  */
-export const ExpoDemoCard: (props: ExpoDemoCardProps) => JSX.Element = ({
+export const ExpoDemoCard: (props: ExpoDemoCardProps & CardProps) => JSX.Element = ({
   style,
   variant = "default",
   inverted = false,
   title,
   description = "",
+  ContentComponent,
   actions = [],
   booleanSettings = [],
   choiceSettings = [],
@@ -126,13 +127,23 @@ export const ExpoDemoCard: (props: ExpoDemoCardProps) => JSX.Element = ({
   )
 
   return title ? (
-    <Card
-      style={$styles}
-      HeadingComponent={renderHeader(title)}
-      content={description}
-      contentStyle={$cardContentText}
-      FooterComponent={renderFooter()}
-    />
+    ContentComponent ? (
+      <Card
+        style={$styles}
+        HeadingComponent={renderHeader(title)}
+        ContentComponent={ContentComponent}
+        contentStyle={$cardContentText}
+        FooterComponent={renderFooter()}
+      />
+    ) : (
+      <Card
+        style={$styles}
+        HeadingComponent={renderHeader(title)}
+        content={description}
+        contentStyle={$cardContentText}
+        FooterComponent={renderFooter()}
+      />
+    )
   ) : (
     <Card
       style={$styles}
