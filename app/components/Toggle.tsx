@@ -203,7 +203,7 @@ export function Toggle(props: ToggleProps) {
 
   return (
     <Wrapper
-      activeOpacity={1}
+      activeOpacity={0.6}
       accessibilityRole={variant}
       accessibilityState={{ checked: value, disabled }}
       {...WrapperProps}
@@ -556,9 +556,9 @@ const $inputWrapper: ViewStyle = {
 }
 
 const $inputOuterBase: ViewStyle = {
-  height: 24,
-  width: 24,
-  borderWidth: 2,
+  height: 24 * spacing.scale,
+  width: 24 * spacing.scale,
+  borderWidth: 2 * spacing.scale,
   alignItems: "center",
   overflow: "hidden",
   flexGrow: 0,
@@ -568,9 +568,17 @@ const $inputOuterBase: ViewStyle = {
 }
 
 const $inputOuterVariants: Record<Variants, StyleProp<ViewStyle>> = {
-  checkbox: [$inputOuterBase, { borderRadius: 4 }],
-  radio: [$inputOuterBase, { borderRadius: 12 }],
-  switch: [$inputOuterBase, { height: 32, width: 56, borderRadius: 16, borderWidth: 0 }],
+  checkbox: [$inputOuterBase, { borderRadius: 4 * spacing.scale }],
+  radio: [$inputOuterBase, { borderRadius: 12 * spacing.scale }],
+  switch: [
+    $inputOuterBase,
+    {
+      height: 32 * spacing.scale,
+      width: 56 * spacing.scale,
+      borderRadius: 16 * spacing.scale,
+      borderWidth: 0,
+    },
+  ],
 }
 
 const $checkboxInner: ViewStyle = {
@@ -582,8 +590,8 @@ const $checkboxInner: ViewStyle = {
 }
 
 const $checkboxDetail: ImageStyle = {
-  width: 20,
-  height: 20,
+  width: 20 * spacing.scale,
+  height: 20 * spacing.scale,
   resizeMode: "contain",
 }
 
@@ -596,9 +604,9 @@ const $radioInner: ViewStyle = {
 }
 
 const $radioDetail: ViewStyle = {
-  width: 12,
-  height: 12,
-  borderRadius: 6,
+  width: 12 * spacing.scale,
+  height: 12 * spacing.scale,
+  borderRadius: 6 * spacing.scale,
 }
 
 const $switchInner: ViewStyle = {
@@ -608,15 +616,15 @@ const $switchInner: ViewStyle = {
   borderColor: colors.transparent,
   overflow: "hidden",
   position: "absolute",
-  paddingStart: 4,
-  paddingEnd: 4,
+  paddingStart: 4 * spacing.scale,
+  paddingEnd: 4 * spacing.scale,
 }
 
 const $switchDetail: SwitchToggleProps["inputDetailStyle"] = {
-  borderRadius: 12,
+  borderRadius: 12 * spacing.scale,
   position: "absolute",
-  width: 24,
-  height: 24,
+  width: 24 * spacing.scale,
+  height: 24 * spacing.scale,
 }
 
 const $helper: TextStyle = {
@@ -642,19 +650,19 @@ const $switchAccessibility: TextStyle = {
 }
 
 const $switchAccessibilityIcon: ImageStyle = {
-  width: 14,
-  height: 14,
+  width: 14 * spacing.scale,
+  height: 14 * spacing.scale,
   resizeMode: "contain",
 }
 
 const $switchAccessibilityLine: ViewStyle = {
-  width: 2,
-  height: 12,
+  width: 2 * spacing.scale,
+  height: 12 * spacing.scale,
 }
 
 const $switchAccessibilityCircle: ViewStyle = {
-  borderWidth: 2,
-  width: 12,
-  height: 12,
-  borderRadius: 6,
+  borderWidth: 2 * spacing.scale,
+  width: 12 * spacing.scale,
+  height: 12 * spacing.scale,
+  borderRadius: 6 * spacing.scale,
 }

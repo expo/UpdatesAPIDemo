@@ -169,16 +169,16 @@ const internalStyles = (variant: ExpoDemoCardVariant, inverted: boolean) => {
     flexDirection: "row",
   }
   const $button: ViewStyle = {
-    minHeight: 30,
-    borderRadius: 10,
-    margin: 10,
+    minHeight: spacing.md,
+    borderRadius: spacing.xs,
+    margin: spacing.xs,
     backgroundColor: theme.icon[variant],
   }
 
   const $buttonPressed: ViewStyle = {
-    minHeight: 30,
-    borderRadius: 10,
-    margin: 10,
+    minHeight: spacing.md,
+    borderRadius: spacing.xs,
+    margin: spacing.xs,
     backgroundColor: theme.background[variant],
   }
 
@@ -202,7 +202,7 @@ const internalStyles = (variant: ExpoDemoCardVariant, inverted: boolean) => {
 
   const $cardHeading: ViewStyle = {
     alignItems: "center",
-    borderBottomWidth: 1.0,
+    borderBottomWidth: 0.5 * spacing.xxxs,
     padding: spacing.sm,
     borderColor: theme.border[variant],
   }
