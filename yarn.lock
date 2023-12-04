@@ -2285,10 +2285,10 @@
   resolved "https://registry.yarnpkg.com/@radix-ui/colors/-/colors-0.1.9.tgz#aad732ecc4ce1018adcb3aedd3ce3c573c2256cc"
   integrity sha512-Vxq944ErPJsdVepjEUhOLO9ApUVOocA63knc+V2TkJ09D/AVOjiMIgkca/7VoYgODcla0qbSIBjje0SMfZMbAw==
 
-"@react-native-async-storage/async-storage@1.18.2":
-  version "1.18.2"
-  resolved "https://registry.yarnpkg.com/@react-native-async-storage/async-storage/-/async-storage-1.18.2.tgz#ec8fd487a0b6c9500b43ece4b8779d1561f12e91"
-  integrity sha512-dM8AfdoeIxlh+zqgr0o5+vCTPQ0Ru1mrPzONZMsr7ufp5h+6WgNxQNza7t0r5qQ6b04AJqTlBNixTWZxqP649Q==
+"@react-native-async-storage/async-storage@1.19.3":
+  version "1.19.3"
+  resolved "https://registry.yarnpkg.com/@react-native-async-storage/async-storage/-/async-storage-1.19.3.tgz#ad5fe3ed0a82d4624aa4500321c1e09c02daeb46"
+  integrity sha512-CwGfoHCWdPOTPS+2fW6YRE1fFBpT9++ahLEroX5hkgwyoQ+TkmjOaUxixdEIoVua9Pz5EF2pGOIJzqOTMWfBlA==
   dependencies:
     merge-options "^3.0.4"
 
@@ -2444,6 +2444,13 @@
     graceful-fs "^4.1.3"
     prompts "^2.4.2"
     semver "^7.5.2"
+
+"@react-native-tvos/config-tv@^0.0.4":
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/@react-native-tvos/config-tv/-/config-tv-0.0.4.tgz#b73b2f8844d3a1e8952b86e45bfde09110820252"
+  integrity sha512-7R0dKIQ4W/JVpig1FrfrJjyZuxZ3qFjkyw6VhklrdICrkcOZE8N9WmWEZXDLKpT9Zc8U7A44BfrjkBOvpK3gKw==
+  dependencies:
+    getenv "^1.0.0"
 
 "@react-native/assets-registry@^0.73.1", "@react-native/assets-registry@~0.73.1":
   version "0.73.1"
@@ -8233,7 +8240,7 @@ rc@~1.2.7:
     minimist "^1.2.0"
     strip-json-comments "~2.0.1"
 
-react-devtools-core@^4.27.7:
+react-devtools-core@^4.28.4:
   version "4.28.5"
   resolved "https://registry.yarnpkg.com/react-devtools-core/-/react-devtools-core-4.28.5.tgz#c8442b91f068cdf0c899c543907f7f27d79c2508"
   integrity sha512-cq/o30z9W2Wb4rzBefjv5fBalHU0rJGZCHAkf/RHSBWSSYwh8PlQTqqOJmgIIbBtpj27T6FIPXeomIjZtCNVqA==
@@ -8325,10 +8332,10 @@ react-native-web@~0.19.6:
     postcss-value-parser "^4.2.0"
     styleq "^0.1.3"
 
-react-native@0.73.0-rc.6:
-  version "0.73.0-rc.6"
-  resolved "https://registry.yarnpkg.com/react-native/-/react-native-0.73.0-rc.6.tgz#5467d2995d9199d6308c7ddc42cf9d810534e6cb"
-  integrity sha512-dSJ/Eg5B2PsQl0np1LsCNyaL1dnFA24LWdTzzEm7gls/2lFe5sz2vZJxKDegV2wti5GWKnVQSr2HOsLO0m1rBw==
+"react-native@npm:react-native-tvos@0.73.0-0rc3":
+  version "0.73.0-0rc3"
+  resolved "https://registry.yarnpkg.com/react-native-tvos/-/react-native-tvos-0.73.0-0rc3.tgz#faf3e1413781b423bb5ea56b790c543a9b2f873c"
+  integrity sha512-xBGHu85iO0QoBgsFECCGO4JAO3tlXBqJRjkcxZYC9ln+3l+rcz1Rpy6Vxr9OzZT2X2aFusa/08BDccp4x/b0Mw==
   dependencies:
     "@jest/create-cache-key-function" "^29.6.3"
     "@react-native-community/cli" "12.1.1"
@@ -8358,7 +8365,7 @@ react-native@0.73.0-rc.6:
     nullthrows "^1.1.1"
     pretty-format "^26.5.2"
     promise "^8.3.0"
-    react-devtools-core "^4.27.7"
+    react-devtools-core "^4.28.4"
     react-refresh "^0.14.0"
     react-shallow-renderer "^16.15.0"
     regenerator-runtime "^0.13.2"

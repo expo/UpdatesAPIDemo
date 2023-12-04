@@ -64,7 +64,13 @@
           }
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "@react-native-tvos/config-tv",
+        {
+          "showVerboseWarnings": true
+        }
+      ]
     ],
     "experiments": {
       "tsconfigPaths": true
