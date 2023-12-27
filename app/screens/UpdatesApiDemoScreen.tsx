@@ -19,7 +19,7 @@ const shortCheckInterval = 10000 // 10 seconds
 
 const defaultCheckInterval = longCheckInterval
 const defaultAutoLaunchCritical = false
-const defaultCheckOnForeground = false
+const defaultCheckOnForeground = true
 const defaultMonitorAlwaysVisible = false
 
 const expoVariant = "default"
