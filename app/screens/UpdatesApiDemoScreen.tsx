@@ -17,10 +17,10 @@ const shortCheckInterval = 10000 // 10 seconds
 
 // Change these to modify the default values for the monitor settings
 
-const defaultCheckInterval = longCheckInterval
+const defaultCheckInterval = shortCheckInterval
 const defaultAutoLaunchCritical = false
 const defaultCheckOnForeground = true
-const defaultMonitorAlwaysVisible = false
+const defaultMonitorAlwaysVisible = true
 
 const expoVariant = "default"
 
