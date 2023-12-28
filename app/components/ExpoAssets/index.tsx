@@ -1,7 +1,8 @@
 import * as React from "react"
 import { FlatList, Image, View, ImageStyle, TextStyle, ViewStyle } from "react-native"
 import { assets, ImageAsset } from "./assets"
-import { ExpoDemoCard, Text } from ".."
+import { ExpoDemoCard } from "../ExpoDemoCard"
+import { Text } from "../Text"
 
 const renderImage = ({ item }: { item: ImageAsset }) => {
   return (
