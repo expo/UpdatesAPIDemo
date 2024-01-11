@@ -1,8 +1,9 @@
 import * as React from "react"
-import { FlatList, Image, View, ImageStyle, TextStyle, ViewStyle } from "react-native"
+import { FlatList, Image, View, ImageStyle, TextStyle, ViewStyle, Platform } from "react-native"
 import { assets, ImageAsset } from "./assets"
 import { ExpoDemoCard } from "../ExpoDemoCard"
 import { Text } from "../Text"
+import { spacing } from "../../theme"
 
 const renderImage = ({ item }: { item: ImageAsset }) => {
   return (
@@ -26,10 +27,11 @@ export const ExpoAssets: () => JSX.Element = () => {
       ContentComponent={
         <FlatList
           nestedScrollEnabled
+          horizontal={Platform.isTV}
           data={assets}
           keyExtractor={imageKey}
           renderItem={renderImage}
-          numColumns={3}
+          numColumns={Platform.isTV ? undefined : 3}
         />
       }
     />
@@ -37,18 +39,20 @@ export const ExpoAssets: () => JSX.Element = () => {
 }
 
 const $image: ImageStyle & { width: number; height: number } = {
-  width: 50,
-  height: 50,
+  width: spacing.xxl,
+  height: spacing.xxl,
+  margin: spacing.xxs,
 }
 
 const $imageContainer: ViewStyle = {
   justifyContent: "center",
   alignItems: "center",
-  margin: 5,
+  margin: spacing.xxs,
+  padding: spacing.xxs,
 }
 
 const $text: TextStyle = {
-  fontSize: 10,
+  fontSize: spacing.sm,
   flexWrap: "wrap",
-  lineHeight: 15,
+  lineHeight: spacing.md,
 }
