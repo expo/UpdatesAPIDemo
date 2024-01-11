@@ -2,25 +2,16 @@ import { useUpdates } from "expo-updates"
 import { lightTheme } from "@expo/styleguide-base"
 import React, { useState } from "react"
 import { ActivityIndicator, TextStyle, View, ViewStyle } from "react-native"
+
 import { ExpoAssets, ExpoDemoCard, Screen, Text, UpdateMonitor } from "../components"
 import { spacing } from "../theme"
 import { DocsLogo } from "../svg"
-
 import {
   currentlyRunningTitle,
   currentlyRunningDescription,
   usePersistentDate,
 } from "../utils/updates"
-
-const longCheckInterval = 3600000 // 1 hour
-const shortCheckInterval = 10000 // 10 seconds
-
-// Change these to modify the default values for the monitor settings
-
-const defaultCheckInterval = longCheckInterval
-const defaultAutoLaunchCritical = false
-const defaultCheckOnForeground = false
-const defaultMonitorAlwaysVisible = false
+import { CheckInterval, checkIntervalFromSettings, useSettings } from "../utils/useSettings"
 
 const expoVariant = "default"
 
@@ -30,10 +21,27 @@ export function UpdatesApiDemoScreen() {
 
   const [showSettings, setShowSettings] = useState(false)
 
-  const [monitorAlwaysVisible, setMonitorAlwaysVisible] = useState(defaultMonitorAlwaysVisible)
-  const [autoLaunchCritical, setAutoLaunchCritical] = useState(defaultAutoLaunchCritical)
-  const [checkOnForeground, setCheckOnForeground] = useState(defaultCheckOnForeground)
-  const [updateCheckInterval, setUpdateCheckInterval] = useState(defaultCheckInterval)
+  const { settings, changeSettings } = useSettings()
+
+  const setMonitorAlwaysVisible = (value: boolean) => {
+    settings.monitorAlwaysVisible = value
+    changeSettings(settings)
+  }
+
+  const setAutoLaunchCritical = (value: boolean) => {
+    settings.autoLaunchCritical = value
+    changeSettings(settings)
+  }
+
+  const setCheckOnForeground = (value: boolean) => {
+    settings.checkOnForeground = value
+    changeSettings(settings)
+  }
+
+  const setUpdateCheckInterval = (value: CheckInterval) => {
+    settings.checkInterval = value
+    changeSettings(settings)
+  }
 
   const lastCheckForUpdateTime = usePersistentDate(lastCheckForUpdateTimeSinceRestart)
 
@@ -41,17 +49,17 @@ export function UpdatesApiDemoScreen() {
     ? [
         {
           label: "Monitor always visible",
-          value: monitorAlwaysVisible,
+          value: settings.monitorAlwaysVisible,
           onChange: setMonitorAlwaysVisible,
         },
         {
           label: "Auto launch critical updates",
-          value: autoLaunchCritical,
+          value: settings.autoLaunchCritical,
           onChange: setAutoLaunchCritical,
         },
         {
           label: "Check when app foregrounds",
-          value: checkOnForeground,
+          value: settings.checkOnForeground,
           onChange: setCheckOnForeground,
         },
       ]
@@ -60,16 +68,16 @@ export function UpdatesApiDemoScreen() {
   const monitorChoiceSettings = showSettings
     ? [
         {
-          value: updateCheckInterval,
+          value: settings.checkInterval,
           onChange: setUpdateCheckInterval,
           choices: [
             {
               label: "Check every hour",
-              value: longCheckInterval,
+              value: CheckInterval.LONG,
             },
             {
               label: "Check every 10 seconds",
-              value: shortCheckInterval,
+              value: CheckInterval.SHORT,
             },
           ],
         },
@@ -103,10 +111,10 @@ export function UpdatesApiDemoScreen() {
       <ExpoAssets />
       <View style={$spacer} />
       <UpdateMonitor
-        alwaysVisible={monitorAlwaysVisible}
-        autoLaunchCritical={autoLaunchCritical}
-        checkOnForeground={checkOnForeground}
-        updateCheckInterval={updateCheckInterval}
+        alwaysVisible={settings.monitorAlwaysVisible}
+        autoLaunchCritical={settings.autoLaunchCritical}
+        checkOnForeground={settings.checkOnForeground}
+        updateCheckInterval={checkIntervalFromSettings(settings)}
         buttonsAlwaysVisible={__DEV__}
       />
       {isChecking || isDownloading ? (
