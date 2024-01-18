@@ -1,6 +1,6 @@
 ## expo-updates asset selection demo
 
-_Note:_ This app uses new features that are still under development, and not yet part of any Expo SDK release. It is provided to allow these features to be previewed, and is for demonstration purposes only.
+- See also the [Expo documentation guide to asset selection](https://docs.expo.dev/eas-update/asset-selection/)
 
 ### Introduction to asset selection
 
