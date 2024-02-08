@@ -74,3 +74,67 @@ Click "Download" to fetch the update, and "Launch" to restart the app with the n
 The "Image Assets" card on the home screen now shows the original images from the `app/embeddedImages` folder. A new image is now included from the `app/includedImages` folder -- this folder is included in the asset selection patterns in `app.json`. The app attempts to show another new image in `app/excludedImages`. This image is resolved by the Metro bundler, but not included in the update or in the original app build, so the image does not show on the screen.
 
 ![assets-02-updated-images](./media/assets-02-updated-images.jpg)
+
+#### Checking locally to ensure that all needed assets are included in an update
+
+Since it is desirable to check for missing images before an update is published, a command has been added to the `expo-updates` CLI to allow users to make this check:
+
+```
+$ npx expo-updates assets:verify --help
+
+Description
+Verify that all static files in an exported bundle are in either the export or an embedded bundle
+
+Usage
+  $ npx expo-updates assets:verify <dir>
+
+  Options
+  <dir>                                  Directory of the Expo project. Default: Current working directory
+  -a, --asset-map-path <path>            Path to the `assetmap.json` in an export produced by the command `npx expo export --dump-assetmap`
+  -e, --exported-manifest-path <path>    Path to the `metadata.json` in an export produced by the command `npx expo export --dump-assetmap`
+  -b, --build-manifest-path <path>       Path to the `app.manifest` file created by expo-updates in an Expo application build (either ios or android)
+  -p, --platform <platform>              Options: ["android","ios"]
+  -h, --help                             Usage info
+
+```
+
+> Eventually, we plan to use this command as part of the `eas update` flow so that EAS will automatically verify that updates have all assets that they need.
+
+To ensure that the command produces valid results, you will need access to the `app.manifest` file generated in Android and iOS builds where `expo-updates` is enabled. This file lists all assets that were resolved by Metro and included in the app during the build.
+
+This check also requires files from the update bundle, specifically the `metadata.json` and `assetmap.json` in the update bundle. When making this check locally during application development, you can at any time generate the same bundle used by EAS Update (or a custom update server) by executing `npx expo export --dump-assetmap`.
+
+For convenience, this demo app includes scripts in `package.json` that execute the above command to generate the update bundle, then perform the check against a local build. The scripts assume that you have built the app locally with `yarn ios --configuration Release` or `yarn android --variant release`.
+
+For example, if we have followed the instructions above to select all images in the `app/` directory, and published an update, there is a single image missing from the update. If we run the demo script, this missing image is detected by the `expo-updates` CLI tool, and the tool returns exit code 1, indicating the missing image error:
+
+```
+$ yarn verify-assets:ios
+yarn run v1.22.19
+$ npx expo export --dump-assetmap -p ios; npx expo-updates assets:verify --build-manifest-path ios/build/Build/Products/Release-iphonesimulator/EXUpdates/EXUpdates.bundle/app.manifest --exported-manifest-path dist/metadata.json --asset-map-path dist/assetmap.json --platform ios
+Starting Metro Bundler
+iOS Bundled 5856ms (node_modules/expo/AppEntry.js)
+iOS node_modules/expo/AppEntry.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 100.0% (997/997)
+Processing asset bundle patterns:
+- /Users/dlowder/iosProjects/UpdatesAPIDemo/app/includedImages/*
+Creating asset map
+
+Exporting 1 asset:
+app/includedImages/white_blue.jpg (585 B)
+
+Exporting 1 bundle for ios:
+_expo/static/js/ios/AppEntry-5836bef8d94817a16949a9170d9bf03e.hbc (2.74 MB)
+
+Exporting 2 files:
+assetmap.json (13 kB)
+metadata.json (207 B)
+
+App exported to: dist
+Error: 1 assets not found in either embedded manifest or in exported bundle:[
+  {
+    "hash": "3808fd53e4ab4bab04593285ef76bed0",
+    "path": "/Users/dlowder/iosProjects/UpdatesAPIDemo/app/excludedImages/white_green.jpg"
+  }
+]
+error Command failed with exit code 1.
+```
