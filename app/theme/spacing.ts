@@ -3,7 +3,7 @@
  */
 import { Platform } from "react-native"
 
-const scale = Platform.isTV ? (Platform.OS === "ios" ? 1.3 : 0.7) : 1
+const scale = Platform.isTV ? (Platform.OS === "ios" ? 1.3 : 0.7) : 0.9
 
 export const spacing = {
   xxxs: 2 * scale,
