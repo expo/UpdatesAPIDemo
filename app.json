@@ -15,7 +15,8 @@
     "updates": {
       "requestHeaders": {
         "expo-channel-name": "main"
-      }
+      },
+      "url": "https://u.expo.dev/e53e89d1-6853-4d16-a300-af4a1b6827b1"
     },
     "jsEngine": "hermes",
     "android": {
@@ -49,6 +50,9 @@
         "assetPatternsToBeBundled": [
           "app/includedImages/*"
         ]
+      },
+      "eas": {
+        "projectId": "e53e89d1-6853-4d16-a300-af4a1b6827b1"
       }
     },
     "plugins": [
@@ -68,6 +72,7 @@
     ],
     "experiments": {
       "tsconfigPaths": true
-    }
+    },
+    "owner": "douglowderexpo"
   }
 }
