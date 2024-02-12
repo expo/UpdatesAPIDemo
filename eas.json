@@ -27,6 +27,13 @@
       },
       "channel": "main"
     },
+    "preview_tv": {
+      "extends": "preview",
+      "env": {
+        "EXPO_TV": "1"
+      },
+      "channel": "main"
+    },
     "production": {
       "channel": "production"
     }
