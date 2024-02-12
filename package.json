@@ -20,8 +20,8 @@
     "prebuild": "npx expo prebuild --no-install",
     "update": "node scripts/push-update.js",
     "select-images": "node scripts/select-images.js",
-    "verify-assets:android": "npx expo export --dump-assetmap -p android; npx expo-updates assets:verify --build-manifest-path android/app/build/intermediates/assets/release/app.manifest --exported-manifest-path dist/metadata.json --asset-map-path dist/assetmap.json --platform android",
-    "verify-assets:ios": "npx expo export --dump-assetmap -p ios; npx expo-updates assets:verify --build-manifest-path ios/build/Build/Products/Release-iphonesimulator/EXUpdates/EXUpdates.bundle/app.manifest --exported-manifest-path dist/metadata.json --asset-map-path dist/assetmap.json --platform ios"
+    "verify-assets:android": "npx expo export --dump-assetmap -p android; npx expo-updates assets:verify --build-manifest-path 8KbrvhLTkG2KNjZ7RyHSWL/assets/app.manifest --exported-manifest-path dist/metadata.json --asset-map-path dist/assetmap.json --platform android",
+    "verify-assets:ios": "npx expo export --dump-assetmap -p ios; npx expo-updates assets:verify --build-manifest-path UpdatesAPIDemo.app/EXUpdates.bundle/app.manifest --exported-manifest-path dist/metadata.json --asset-map-path dist/assetmap.json --platform ios"
   },
   "overrides": {
     "react-error-overlay": "6.0.9"
