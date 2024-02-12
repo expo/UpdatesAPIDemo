@@ -7,11 +7,9 @@ const projectRoot = path.resolve(__dirname, "..")
 
 const tmpDirForBuild = path.join(process.env.TMPDIR, "tmpDirForBuild")
 
-console.log(tmpDirForBuild)
-
 const main = async () => {
   try {
-    await fs.rmdir(tmpDirForBuild, { recursive: true, force: true })
+    await fs.rm(tmpDirForBuild, { recursive: true, force: true })
   } catch (_e) {}
   await fs.mkdir(tmpDirForBuild)
 
@@ -41,7 +39,7 @@ const main = async () => {
   await console.log(`Unpacking artifact with apktool...`)
   await spawnAsync("apktool", ["d", "out.apk"], {
     cwd: tmpDirForBuild,
-    stdio: "inherit",
+    stdio: "ignore",
   })
 
   console.log(`Copying app.manifest to project directory...`)
