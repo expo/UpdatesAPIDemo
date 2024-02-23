@@ -2205,10 +2205,10 @@
     prompts "^2.4.2"
     semver "^7.5.2"
 
-"@react-native-tvos/config-tv@^0.0.4":
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/@react-native-tvos/config-tv/-/config-tv-0.0.4.tgz#b73b2f8844d3a1e8952b86e45bfde09110820252"
-  integrity sha512-7R0dKIQ4W/JVpig1FrfrJjyZuxZ3qFjkyw6VhklrdICrkcOZE8N9WmWEZXDLKpT9Zc8U7A44BfrjkBOvpK3gKw==
+"@react-native-tvos/config-tv@^0.0.6":
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/@react-native-tvos/config-tv/-/config-tv-0.0.6.tgz#edce6008820895cb2455c9729184cf4297d9fd08"
+  integrity sha512-xBt2G8LA9of/rrHdfJFIPTeCdEg+sR2XLW+pT1FxtXkW5ifVkua95upO83HmbdfNeZeDoAmjjhEQ4kCZOXmsDQ==
   dependencies:
     getenv "^1.0.0"
 
