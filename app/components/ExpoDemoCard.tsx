@@ -172,24 +172,24 @@ const internalStyles = (variant: ExpoDemoCardVariant, inverted: boolean) => {
     minHeight: spacing.md,
     borderRadius: spacing.xs,
     margin: spacing.xs,
-    backgroundColor: theme.icon[variant],
+    backgroundColor: theme.background[variant],
   }
 
   const $buttonPressed: ViewStyle = {
     minHeight: spacing.md,
     borderRadius: spacing.xs,
     margin: spacing.xs,
-    backgroundColor: theme.background[variant],
+    backgroundColor: theme.icon[variant],
   }
 
   const $buttonText: TextStyle = {
-    fontSize: spacing.sm,
-    color: theme.background[variant],
+    fontSize: spacing.md,
+    color: theme.icon[variant],
   }
 
   const $buttonTextPressed: TextStyle = {
-    fontSize: spacing.sm,
-    color: theme.icon[variant],
+    fontSize: spacing.md,
+    color: theme.background[variant],
   }
 
   const $card: ViewStyle = {
@@ -209,11 +209,12 @@ const internalStyles = (variant: ExpoDemoCardVariant, inverted: boolean) => {
 
   const $cardHeadingText: TextStyle = {
     color: theme.text[variant],
+    fontSize: spacing.lg,
   }
 
   const $cardContentText: TextStyle = {
     fontFamily: typography.primary.normal,
-    fontSize: spacing.sm,
+    fontSize: spacing.md,
     color: theme.text[variant],
     lineHeight: spacing.md,
   }

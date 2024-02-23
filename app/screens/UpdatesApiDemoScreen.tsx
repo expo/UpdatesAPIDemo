@@ -84,6 +84,15 @@ export function UpdatesApiDemoScreen() {
       ]
     : []
 
+  const descriptionLines = currentlyRunningDescription(
+    currentlyRunning,
+    lastCheckForUpdateTime,
+  ).split("\n")
+  const description1 = descriptionLines.slice(0, 3).join("\n")
+  const description2 = (
+    descriptionLines.length > 3 ? descriptionLines.slice(3, descriptionLines.length) : []
+  ).join("\n")
+
   return (
     <Screen preset="scroll" contentContainerStyle={$container} safeAreaEdges={["bottom", "top"]}>
       <View style={$topHeading}>
@@ -98,6 +107,12 @@ export function UpdatesApiDemoScreen() {
       <ExpoDemoCard
         variant={expoVariant}
         title={currentlyRunningTitle(currentlyRunning)}
+        ContentComponent={
+          <View style={$content}>
+            <Text style={$contentText}>{description1}</Text>
+            <Text style={$contentText}>{description2}</Text>
+          </View>
+        }
         description={currentlyRunningDescription(currentlyRunning, lastCheckForUpdateTime)}
         actions={[
           {
@@ -134,6 +149,16 @@ const $container: ViewStyle = {
   justifyContent: "flex-start",
   alignItems: "center",
   paddingHorizontal: spacing.lg,
+}
+
+const $content: ViewStyle = {
+  flexDirection: "row",
+}
+
+const $contentText: TextStyle = {
+  fontSize: spacing.md,
+  flex: 2,
+  marginHorizontal: spacing.md,
 }
 
 const $topHeading: ViewStyle = {
