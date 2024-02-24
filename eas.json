@@ -7,11 +7,20 @@
       "extends": "production",
       "distribution": "internal",
       "android": {
+        "buildType": "apk",
+        "withoutCredentials": true,
         "gradleCommand": ":app:assembleDebug"
       },
       "ios": {
         "buildConfiguration": "Debug",
         "simulator": true
+      },
+      "channel": "development"
+    },
+    "development_tv": {
+      "extends": "development",
+      "env": {
+        "EXPO_TV": "1"
       },
       "channel": "development"
     },
