@@ -19,6 +19,7 @@ import { UpdatesApiDemoScreen } from "./screens"
 import { customFontsToLoad } from "./theme"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
 import { ViewStyle } from "react-native"
+import { useAsyncStorageDevTools } from "@dev-plugins/async-storage"
 
 interface AppProps {
   hideSplashScreen: () => Promise<boolean>
@@ -29,6 +30,8 @@ interface AppProps {
  */
 function App(props: AppProps) {
   const { hideSplashScreen } = props
+
+  useAsyncStorageDevTools()
 
   const [areFontsLoaded, error] = useFonts(customFontsToLoad)
 
