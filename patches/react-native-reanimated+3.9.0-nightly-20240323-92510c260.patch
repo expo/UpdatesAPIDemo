@@ -1,0 +1,22 @@
+diff --git a/node_modules/react-native-reanimated/android/src/reactNativeVersionPatch/ReanimatedUIManager/latest/com/swmansion/reanimated/layoutReanimation/ReanimatedUIManager.java b/node_modules/react-native-reanimated/android/src/reactNativeVersionPatch/ReanimatedUIManager/latest/com/swmansion/reanimated/layoutReanimation/ReanimatedUIManager.java
+index 2c6cb18..34c4ebb 100644
+--- a/node_modules/react-native-reanimated/android/src/reactNativeVersionPatch/ReanimatedUIManager/latest/com/swmansion/reanimated/layoutReanimation/ReanimatedUIManager.java
++++ b/node_modules/react-native-reanimated/android/src/reactNativeVersionPatch/ReanimatedUIManager/latest/com/swmansion/reanimated/layoutReanimation/ReanimatedUIManager.java
+@@ -100,7 +100,7 @@ public class ReanimatedUIManager extends UIManagerModule {
+   @ReactMethod
+   @Deprecated
+   public void replaceExistingNonRootView(int oldTag, int newTag) {
+-    super.replaceExistingNonRootView(oldTag, newTag);
++//    super.replaceExistingNonRootView(oldTag, newTag);
+   }
+ 
+   /**
+@@ -113,7 +113,7 @@ public class ReanimatedUIManager extends UIManagerModule {
+   @ReactMethod
+   @Deprecated
+   public void removeSubviewsFromContainerWithID(int containerTag) {
+-    super.removeSubviewsFromContainerWithID(containerTag);
++//    super.removeSubviewsFromContainerWithID(containerTag);
+   }
+ 
+   /**
