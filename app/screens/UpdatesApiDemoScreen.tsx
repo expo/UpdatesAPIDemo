@@ -104,6 +104,12 @@ export function UpdatesApiDemoScreen() {
             label: showSettings ? "Hide monitor options" : "Show monitor options",
             onPress: () => setShowSettings(!showSettings),
           },
+          {
+            label: "Press to crash",
+            onPress: () => {
+              throw new Error("Let us crash")
+            },
+          },
         ]}
         booleanSettings={monitorBooleanSettings}
         choiceSettings={monitorChoiceSettings}
