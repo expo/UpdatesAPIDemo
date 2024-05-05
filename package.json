@@ -19,6 +19,7 @@
     "prebuild": "./scripts/prebuild.sh",
     "update": "node scripts/push-update.js",
     "select-images": "node scripts/select-images.js",
+    "select-all-images": "node scripts/select-images.js app/*/*.jpg",
     "download-latest-app-manifest": "node scripts/download-latest-app-manifest",
     "verify-assets:android": "npx expo export --dump-assetmap -p android; npx expo-updates assets:verify --build-manifest-path app.manifest --exported-manifest-path dist/metadata.json --asset-map-path dist/assetmap.json --platform android",
     "verify-assets:ios": "npx expo export --dump-assetmap -p ios; npx expo-updates assets:verify --build-manifest-path app.manifest --exported-manifest-path dist/metadata.json --asset-map-path dist/assetmap.json --platform ios"
