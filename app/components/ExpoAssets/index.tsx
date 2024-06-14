@@ -1,5 +1,5 @@
 import * as React from "react"
-import { FlatList, Image, View, ImageStyle, TextStyle, ViewStyle, Platform } from "react-native"
+import { Image, View, ImageStyle, TextStyle, ViewStyle } from "react-native"
 import { assets, ImageAsset } from "./assets"
 import { ExpoDemoCard } from "../ExpoDemoCard"
 import { Text } from "../Text"
@@ -7,7 +7,7 @@ import { spacing } from "../../theme"
 
 const renderImage = ({ item }: { item: ImageAsset }) => {
   return (
-    <View style={$imageContainer}>
+    <View key={imageKey(item)} style={$imageContainer}>
       <Text style={$text}>{item.directory}</Text>
       <Text style={$text}>{item.name}</Text>
       <Image source={item.image} height={$image.height} width={$image.width} style={$image} />
@@ -25,14 +25,7 @@ export const ExpoAssets: () => JSX.Element = () => {
     <ExpoDemoCard
       title="Image Assets"
       ContentComponent={
-        <FlatList
-          nestedScrollEnabled
-          horizontal={Platform.isTV}
-          data={assets}
-          keyExtractor={imageKey}
-          renderItem={renderImage}
-          numColumns={Platform.isTV ? undefined : 3}
-        />
+        <View style={$imageList}>{assets.map((item) => renderImage({ item }))}</View>
       }
     />
   )
@@ -49,6 +42,12 @@ const $imageContainer: ViewStyle = {
   alignItems: "center",
   margin: spacing.xxs,
   padding: spacing.xxs,
+}
+
+const $imageList: ViewStyle = {
+  flexDirection: "row",
+  flexWrap: "wrap",
+  width: "100%",
 }
 
 const $text: TextStyle = {
