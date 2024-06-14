@@ -1,12 +1,12 @@
 import * as React from "react"
-import { FlatList, Image, View, ImageStyle, TextStyle, ViewStyle } from "react-native"
+import { Image, View, ImageStyle, TextStyle, ViewStyle } from "react-native"
 import { assets, ImageAsset } from "./assets"
 import { ExpoDemoCard } from "../ExpoDemoCard"
 import { Text } from "../Text"
 
 const renderImage = ({ item }: { item: ImageAsset }) => {
   return (
-    <View style={$imageContainer}>
+    <View key={imageKey(item)} style={$imageContainer}>
       <Text style={$text}>{item.directory}</Text>
       <Text style={$text}>{item.name}</Text>
       <Image source={item.image} height={$image.height} width={$image.width} style={$image} />
@@ -24,13 +24,7 @@ export const ExpoAssets: () => JSX.Element = () => {
     <ExpoDemoCard
       title="Image Assets"
       ContentComponent={
-        <FlatList
-          nestedScrollEnabled
-          data={assets}
-          keyExtractor={imageKey}
-          renderItem={renderImage}
-          numColumns={3}
-        />
+        <View style={$imageList}>{assets.map((item) => renderImage({ item }))}</View>
       }
     />
   )
@@ -45,6 +39,12 @@ const $imageContainer: ViewStyle = {
   justifyContent: "center",
   alignItems: "center",
   margin: 5,
+}
+
+const $imageList: ViewStyle = {
+  flexDirection: "row",
+  flexWrap: "wrap",
+  width: "100%",
 }
 
 const $text: TextStyle = {
