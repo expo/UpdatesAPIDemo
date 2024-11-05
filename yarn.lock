@@ -4874,6 +4874,20 @@ expo-modules-autolinking@2.0.0-preview.2:
     require-from-string "^2.0.2"
     resolve-from "^5.0.0"
 
+expo-modules-autolinking@^2.0.0-preview.3:
+  version "2.0.0-preview.3"
+  resolved "https://registry.yarnpkg.com/expo-modules-autolinking/-/expo-modules-autolinking-2.0.0-preview.3.tgz#6740ffac59670a7db4fbddaffd609b502ffde7d9"
+  integrity sha512-fnOUIBC7wgwnWcaD6Vd4kf7hlUmIYrB0Ppiu67GqiwkzHhm/wa/pQVsgN7EH1xqDoEQTQFtnyUSQdzANxlFqyw==
+  dependencies:
+    "@expo/spawn-async" "^1.7.2"
+    chalk "^4.1.0"
+    commander "^7.2.0"
+    fast-glob "^3.2.5"
+    find-up "^5.0.0"
+    fs-extra "^9.1.0"
+    require-from-string "^2.0.2"
+    resolve-from "^5.0.0"
+
 expo-modules-core@2.0.0-preview.9, expo-modules-core@~2.0.0-preview.9:
   version "2.0.0-preview.9"
   resolved "https://registry.yarnpkg.com/expo-modules-core/-/expo-modules-core-2.0.0-preview.9.tgz#dab275413d114bd58313ee823ecdc9b5a0926c53"

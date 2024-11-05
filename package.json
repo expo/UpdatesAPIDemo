@@ -49,6 +49,7 @@
     "expo-font": "~13.0.0",
     "expo-linking": "~7.0.2",
     "expo-localization": "~16.0.0",
+    "expo-modules-autolinking": "^2.0.0-preview.3",
     "expo-modules-core": "~2.0.0-preview.9",
     "expo-splash-screen": "~0.29.1",
     "expo-status-bar": "~2.0.0",
