@@ -74,7 +74,7 @@
     "@babel/plugin-transform-template-literals": "^7.24.7",
     "@babel/preset-env": "^7.24.7",
     "@babel/runtime": "^7.24.7",
-    "@expo/metro-config": "~0.19.0-preview",
+    "@expo/metro-config": "~0.19.0",
     "@react-native/babel-preset": "^0.74.0",
     "@types/i18n-js": "3.8.2",
     "@types/jest": "^29.2.1",
