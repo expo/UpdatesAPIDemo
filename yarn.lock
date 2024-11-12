@@ -1509,30 +1509,6 @@
     postcss "~8.4.32"
     resolve-from "^5.0.0"
 
-"@expo/metro-config@~0.19.0-preview":
-  version "0.19.0-preview.2"
-  resolved "https://registry.yarnpkg.com/@expo/metro-config/-/metro-config-0.19.0-preview.2.tgz#ce582a844d862d7b8dd6924fac9f2857283ef7eb"
-  integrity sha512-BxZoSaiRb2GWs/gzgs9lVgaAme3H5qpbetFIgcxsX7muFf/XsKZjElDnPzI0pZTyDMAOLi5bpPm/BhLfxdd6hw==
-  dependencies:
-    "@babel/core" "^7.20.0"
-    "@babel/generator" "^7.20.5"
-    "@babel/parser" "^7.20.0"
-    "@babel/types" "^7.20.0"
-    "@expo/config" "~10.0.0"
-    "@expo/env" "~0.4.0"
-    "@expo/json-file" "~9.0.0"
-    "@expo/spawn-async" "^1.7.2"
-    chalk "^4.1.0"
-    debug "^4.3.2"
-    fs-extra "^9.1.0"
-    getenv "^1.0.0"
-    glob "^10.4.2"
-    jsc-safe-url "^0.2.4"
-    lightningcss "~1.27.0"
-    minimatch "^3.0.4"
-    postcss "~8.4.32"
-    resolve-from "^5.0.0"
-
 "@expo/metro-runtime@~4.0.0":
   version "4.0.0"
   resolved "https://registry.yarnpkg.com/@expo/metro-runtime/-/metro-runtime-4.0.0.tgz#fedccde1baebe97c02584331194f1f793492abbe"
@@ -6314,10 +6290,10 @@ jest-environment-node@^29.6.3, jest-environment-node@^29.7.0:
     jest-mock "^29.7.0"
     jest-util "^29.7.0"
 
-jest-expo@~52.0.0-preview.3:
-  version "52.0.0-preview.3"
-  resolved "https://registry.yarnpkg.com/jest-expo/-/jest-expo-52.0.0-preview.3.tgz#ea98eeb2384f4adabc96d50dd2a14fb84b102278"
-  integrity sha512-cCtXxARm3+w0oJN3g8r2nVQrkdQIWFshaZUs3vfhPKrvby9gXG3DH6h/NWSPXLo9PG17rOtROsIqf2sEiLYtSg==
+jest-expo@~52.0.0:
+  version "52.0.0"
+  resolved "https://registry.yarnpkg.com/jest-expo/-/jest-expo-52.0.0.tgz#6badddcebe458674f78c596d6992251237fdf80d"
+  integrity sha512-HnMCdVh08me4VPucxlq3t28q7yxwrnDf55JFFwJ3hdfXUG55Zy6aDHT0Oeefd4uOCHAUJaBvl3kWpNgUmMRBtA==
   dependencies:
     "@expo/config" "~10.0.0"
     "@expo/json-file" "^9.0.0"
