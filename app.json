@@ -53,17 +53,7 @@
     },
     "plugins": [
       "expo-localization",
-      [
-        "expo-build-properties",
-        {
-          "ios": {
-            "newArchEnabled": false
-          },
-          "android": {
-            "newArchEnabled": false
-          }
-        }
-      ],
+      "expo-build-properties",
       "expo-font"
     ],
     "experiments": {

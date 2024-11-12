@@ -16,6 +16,7 @@ Built using the [Ignite React Native boilerplate CLI](https://github.com/infinit
 #### Setup
 
 ```bash
+# You can execute `bun install` instead of `yarn` if you prefer
 yarn
 eas init
 eas update:configure
@@ -37,11 +38,16 @@ Then download and run the build on your simulator/emulator.
 
 #### Build locally
 
+> These steps can also be run with `bun` instead of `yarn`.
+
 ```
+
+# Prebuild (generate native projects for both platforms)
+yarn prebuild
 # Build and run iOS
-npx expo run:ios --configuration Release
+yarn ios:release
 # Build and run Android
-npx expo run:android --variant release
+yarn android:release
 ```
 
 ### Using the app
