@@ -11,14 +11,22 @@ App to test out
 
 Built using the [Ignite React Native boilerplate CLI](https://github.com/infinitered/ignite)
 
+> _NOTE_: This branch contains a custom Swift AppDelegate that demonstrates how to start the iOS app and initialize the `expo-updates` system correctly. See [AppDelegate.swift](./ios/UpdatesAPIDemo/AppDelegate.swift). The features in this demo all work, except for the [`reloadAsync()`](https://docs.expo.dev/versions/latest/sdk/updates/#updatesreloadasync) API.
+
+> _WARNING_: This branch is EXPERIMENTAL, has some known issues, and is NOT intended for production use.
+
 ### Quick start
 
 #### Setup
 
 ```bash
 yarn
-eas init
-eas update:configure
+eas init # Creates or uses an EAS project ID, and adds it to app.json
+eas update:configure # Sets up Expo.plist with the correct constants used by expo-updates
+# For the custom Swift AppDelegate, these steps do
+# pod install with EX_UPDATES_NATIVE_DEBUG=1, so you can debug native code
+yarn ios:clean
+yarn ios:prepare
 ```
 
 Then you can build locally or build with EAS
