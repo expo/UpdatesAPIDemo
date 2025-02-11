@@ -4,8 +4,9 @@ import React
 import UIKit
 
 @UIApplicationMain
-class AppDelegate: EXAppDelegateWrapper, UNUserNotificationCenterDelegate, AppControllerDelegate {
+class AppDelegate: EXAppDelegateWrapper, UNUserNotificationCenterDelegate {
   var launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+  // AppDelegate keeps a nullable reference to the updates controller
   var updatesController: (any InternalAppControllerInterface)?
 
   override func bundleURL() -> URL? {
@@ -23,8 +24,8 @@ class AppDelegate: EXAppDelegateWrapper, UNUserNotificationCenterDelegate, AppCo
   }
 
   /**
-   Application launch starts the expo-updates system, and view initialization
-   is deferred to the expo-updates completion handler (onSuccess())
+   Application launch initializes the custom view controller: all React Native
+   and updates initialization is handled there
    */
   override func application(
     _ application: UIApplication,
@@ -33,37 +34,15 @@ class AppDelegate: EXAppDelegateWrapper, UNUserNotificationCenterDelegate, AppCo
     self.launchOptions = launchOptions
     self.moduleName = "main"
     self.initialProps = [:]
-
-    AppController.initializeWithoutStarting()
-    self.updatesController = AppController.sharedInstance
-    self.updatesController?.delegate = self
-    self.updatesController?.start()
-    return true
-  }
-
-  /**
-   expo-updates completion handler initializes the custom view controller with
-   a RCTRootView with the correct bundleURL
-   */
-  func appController(
-    _ appController: AppControllerInterface,
-    didStartWithSuccess success: Bool
-  ) {
-    self.window = UIWindow(frame: UIScreen.main.bounds)
     self.rootViewFactory = createRCTRootViewFactory()
-    let rootView = rootViewFactory.view(withModuleName: "main", initialProperties: self.initialProps, launchOptions: launchOptions)
+
+    self.window = UIWindow(frame: UIScreen.main.bounds)
     let controller = CustomViewController()
     controller.view.clipsToBounds = true
-    controller.view.addSubview(rootView)
-    rootView.translatesAutoresizingMaskIntoConstraints = false
-    NSLayoutConstraint.activate([
-      rootView.topAnchor.constraint(equalTo: controller.view.safeAreaLayoutGuide.topAnchor),
-      rootView.bottomAnchor.constraint(equalTo: controller.view.safeAreaLayoutGuide.bottomAnchor),
-      rootView.leadingAnchor.constraint(equalTo: controller.view.safeAreaLayoutGuide.leadingAnchor),
-      rootView.trailingAnchor.constraint(equalTo: controller.view.safeAreaLayoutGuide.trailingAnchor)
-    ])
     self.window.rootViewController = controller
     window.makeKeyAndVisible()
+
+    return true
   }
 
   override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
