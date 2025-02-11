@@ -11,7 +11,11 @@ App to test out
 
 Built using the [Ignite React Native boilerplate CLI](https://github.com/infinitered/ignite)
 
-> _NOTE_: This branch contains a custom Swift AppDelegate that demonstrates how to start the iOS app and initialize the `expo-updates` system correctly. See [AppDelegate.swift](./ios/UpdatesAPIDemo/AppDelegate.swift). The features in this demo all work, except for the [`reloadAsync()`](https://docs.expo.dev/versions/latest/sdk/updates/#updatesreloadasync) API.
+> _NOTE_: This branch contains a custom Swift AppDelegate that demonstrates how to start the iOS app and initialize the `expo-updates` system correctly. See [AppDelegate.swift](./ios/UpdatesAPIDemo/AppDelegate.swift) and [CustomViewController.swift](./ios/UpdatesAPIDemo/CustomViewController.swift). The features in this demo all work, including the [`reloadAsync()`](https://docs.expo.dev/versions/latest/sdk/updates/#updatesreloadasync) API.
+
+> In order for `expo-updates` to work correctly with this custom initialization, a patch is applied to remove the default Expo module react delegate provided by `expo-updates`. See [this patch file](./patches/expo-updates+0.25.27.patch).
+
+> There is also a small [patch to `expo-modules-core`](./patches/expo-modules-core+1.12.26.patch) to add a feature that we need from Expo SDK 52 and later, so that the RN root view factory creation method is public.
 
 > _WARNING_: This branch is EXPERIMENTAL, has some known issues, and is NOT intended for production use.
 
