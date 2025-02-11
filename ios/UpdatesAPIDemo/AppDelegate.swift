@@ -5,22 +5,14 @@ import UIKit
 
 @UIApplicationMain
 class AppDelegate: EXAppDelegateWrapper, UNUserNotificationCenterDelegate, AppControllerDelegate {
-  var updatesController: InternalAppControllerInterface?
   var launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+  var updatesController: (any InternalAppControllerInterface)?
 
-  var bundleURL: URL {
-    get {
-      if let jsBundle = self.updatesController?.launchAssetUrl() {
-        return jsBundle
-      }
-      guard let jsBundle = Bundle.main.url(
-        forResource: "main",
-        withExtension: "jsbundle"
-      ) else {
-        fatalError("Could not locate React Native jsbundle")
-      }
+  override func bundleURL() -> URL? {
+    if let jsBundle = updatesController?.launchAssetUrl() {
       return jsBundle
     }
+    return Bundle.main.url(forResource: "main", withExtension: "jsbundle")
   }
 
   static func shared() -> AppDelegate {
@@ -40,12 +32,12 @@ class AppDelegate: EXAppDelegateWrapper, UNUserNotificationCenterDelegate, AppCo
   ) -> Bool {
     self.launchOptions = launchOptions
     self.moduleName = "main"
+    self.initialProps = [:]
 
     AppController.initializeWithoutStarting()
     self.updatesController = AppController.sharedInstance
     self.updatesController?.delegate = self
     self.updatesController?.start()
-
     return true
   }
 
@@ -58,9 +50,9 @@ class AppDelegate: EXAppDelegateWrapper, UNUserNotificationCenterDelegate, AppCo
     didStartWithSuccess success: Bool
   ) {
     self.window = UIWindow(frame: UIScreen.main.bounds)
-
+    self.rootViewFactory = createRCTRootViewFactory()
+    let rootView = rootViewFactory.view(withModuleName: "main", initialProperties: self.initialProps, launchOptions: launchOptions)
     let controller = CustomViewController()
-    let rootView = RCTRootView(bundleURL: bundleURL, moduleName: "main", initialProperties: [:])
     controller.view.clipsToBounds = true
     controller.view.addSubview(rootView)
     rootView.translatesAutoresizingMaskIntoConstraints = false
@@ -71,12 +63,11 @@ class AppDelegate: EXAppDelegateWrapper, UNUserNotificationCenterDelegate, AppCo
       rootView.trailingAnchor.constraint(equalTo: controller.view.safeAreaLayoutGuide.trailingAnchor)
     ])
     self.window.rootViewController = controller
-
-    self.window.backgroundColor = .black
-    self.window.makeKeyAndVisible()
+    window.makeKeyAndVisible()
   }
 
   override func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
-    return super.application(app, open: url, options: options) || RCTLinkingManager.application(app, open: url, options: options)
+    return super.application(app, open: url, options: options) ||
+      RCTLinkingManager.application(app, open: url, options: options)
   }
 }
