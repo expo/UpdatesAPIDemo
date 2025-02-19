@@ -12,3 +12,16 @@ index 1cfc0c6..13cf7a7 100644
    },
    "android": {
      "modules": [
+diff --git a/node_modules/expo-updates/ios/EXUpdates/UpdatesUtils.swift b/node_modules/expo-updates/ios/EXUpdates/UpdatesUtils.swift
+index 5ac2d2d..9713436 100644
+--- a/node_modules/expo-updates/ios/EXUpdates/UpdatesUtils.swift
++++ b/node_modules/expo-updates/ios/EXUpdates/UpdatesUtils.swift
+@@ -133,7 +133,7 @@ public final class UpdatesUtils: NSObject {
+     }
+   }
+ 
+-  internal static func isNativeDebuggingEnabled() -> Bool {
++  public static func isNativeDebuggingEnabled() -> Bool {
+ #if EX_UPDATES_NATIVE_DEBUG
+     return true
+ #else
