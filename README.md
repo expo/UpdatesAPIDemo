@@ -30,7 +30,12 @@ eas update:configure # Sets up Expo.plist with the correct constants used by exp
 # For the custom Swift AppDelegate, these steps do
 # pod install with EX_UPDATES_NATIVE_DEBUG=1, so you can debug native code
 yarn ios:clean
-yarn ios:prepare
+yarn ios:prepare:updates
+# When running the app in development mode with a packager,
+# the expo-updates controller will not work, and should not be started.
+# To set up the app to run this way:
+yarn ios:clean
+yarn ios:prepare:packager
 ```
 
 Then you can build locally or build with EAS
