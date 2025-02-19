@@ -9,18 +9,22 @@ public class CustomViewController: UIViewController, AppControllerDelegate {
   let appDelegate = AppDelegate.shared()
 
   /**
-   The initializer starts the expo-updates system, and view initialization
-   is deferred to the expo-updates completion handler (onSuccess())
+   If updates is enabled, the initializer starts the expo-updates system,
+   and view initialization is deferred to the expo-updates completion handler (onSuccess())
    */
   public convenience init() {
     self.init(nibName: nil, bundle: nil)
     self.view.backgroundColor = .clear
-    AppController.initializeWithoutStarting()
-    // Set the updatesController property in AppDelegate so its bundleURL() method
-    // works as expected
-    appDelegate.updatesController = AppController.sharedInstance
-    AppController.sharedInstance.delegate = self
-    AppController.sharedInstance.start()
+    if AppDelegate.isRunningWithPackager() {
+      // No expo-updates, just create the view
+      createView()
+    } else {
+      // Set the updatesController property in AppDelegate so its bundleURL() method
+      // works as expected
+      appDelegate.updatesController = AppController.sharedInstance
+      AppController.sharedInstance.delegate = self
+      AppController.sharedInstance.start()
+    }
   }
 
   required public override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
@@ -39,6 +43,10 @@ public class CustomViewController: UIViewController, AppControllerDelegate {
     _ appController: AppControllerInterface,
     didStartWithSuccess success: Bool
   ) {
+    createView()
+  }
+
+  private func createView() {
     let rootView = appDelegate.rootViewFactory.view(
       withModuleName: "main",
       initialProperties: appDelegate.initialProps,
