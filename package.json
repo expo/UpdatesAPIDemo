@@ -34,6 +34,7 @@
     "@expo/metro-runtime": "~5.0.2",
     "@expo/styleguide-base": "^1.0.1",
     "@expo/styleguide-native": "^7.0.1",
+    "@radix-ui/colors": "^3.0.0",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/cli": "^15.0.1",
     "@react-navigation/bottom-tabs": "^6.3.2",
