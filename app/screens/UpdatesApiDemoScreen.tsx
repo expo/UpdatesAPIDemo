@@ -1,6 +1,6 @@
-import { useUpdates } from "expo-updates"
+import { useUpdates, setUpdateURLAndRequestHeadersOverride } from "expo-updates"
 import { lightTheme } from "@expo/styleguide-base"
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import { ActivityIndicator, TextStyle, View, ViewStyle } from "react-native"
 
 import { ExpoAssets, ExpoDemoCard, Screen, Text, UpdateMonitor } from "../components"
@@ -10,8 +10,14 @@ import {
   currentlyRunningTitle,
   currentlyRunningDescription,
   usePersistentDate,
+  updateUrl,
 } from "../utils/updates"
 import { CheckInterval, checkIntervalFromSettings, useSettings } from "../utils/useSettings"
+
+enum CustomUpdateChannels {
+  main = "main",
+  test = "test",
+}
 
 const expoVariant = "default"
 
@@ -20,6 +26,10 @@ export function UpdatesApiDemoScreen() {
     useUpdates()
 
   const [showSettings, setShowSettings] = useState(false)
+
+  const [preferredUpdateChannel, setPreferredUpdateChannel] = useState<CustomUpdateChannels>(
+    CustomUpdateChannels.main,
+  )
 
   const { settings, changeSettings } = useSettings()
 
@@ -42,6 +52,22 @@ export function UpdatesApiDemoScreen() {
     settings.checkInterval = value
     changeSettings(settings)
   }
+
+  const setUpdateChannel = (value: CustomUpdateChannels) => {
+    setPreferredUpdateChannel(value)
+    setUpdateURLAndRequestHeadersOverride({
+      updateUrl,
+      requestHeaders: {
+        "expo-channel-name": value,
+      },
+    })
+  }
+
+  useEffect(() => {
+    setPreferredUpdateChannel(
+      currentlyRunning?.channel === "test" ? CustomUpdateChannels.test : CustomUpdateChannels.main,
+    )
+  }, [currentlyRunning?.channel])
 
   const lastCheckForUpdateTime = usePersistentDate(lastCheckForUpdateTimeSinceRestart)
 
@@ -78,6 +104,22 @@ export function UpdatesApiDemoScreen() {
             {
               label: "Check every 10 seconds",
               value: CheckInterval.SHORT,
+            },
+          ],
+        },
+        {
+          value: preferredUpdateChannel,
+          onChange: setUpdateChannel,
+          choices: [
+            {
+              label: "Updates from main channel",
+              value: CustomUpdateChannels.main,
+              default: preferredUpdateChannel === CustomUpdateChannels.main,
+            },
+            {
+              label: "Updates from test channel",
+              value: CustomUpdateChannels.test,
+              default: preferredUpdateChannel === CustomUpdateChannels.test,
             },
           ],
         },
