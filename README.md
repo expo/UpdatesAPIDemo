@@ -8,6 +8,7 @@ App to test out
 - Example solutions for some use cases
 - Uses the [Updates JS API](https://docs.expo.dev/versions/latest/sdk/updates/#useupdates) introduced in SDK 50
 - Uses the [expo-updates asset selection feature](./ASSETSELECTION.md) introduced in SDK 50
+- Can use the [update configuration override feature](./UPDATECONFIGURATION.md) introduced in SDK 52.
 
 Built using the [Ignite React Native boilerplate CLI](https://github.com/infinitered/ignite)
 
