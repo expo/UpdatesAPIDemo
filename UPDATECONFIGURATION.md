@@ -43,7 +43,8 @@ npx expo run:android --variant release
 
 When the app starts, click the button "Show monitor options". It will show that updates are currently being fetched from the channel named "main".
 
-(Insert screenshot here)
+![Simulator Screenshot - iPhone 16 - 2025-04-24 at 20 05 09](https://github.com/user-attachments/assets/66330135-3bc0-4917-8d3c-e767cfc3a51e)
+
 
 If you have not done so already, create a new channel named "test". This will automatically create a branch of the same name.
 
@@ -59,8 +60,10 @@ yarn update -m "First test update" -br test
 
 Now, in the app, click the button "Updates from test channel". This will change the updates configuration to fetch updates from the "test" channel, and show an alert. The new configuration will become active the next time the app exits and restarts.
 
-(Insert screenshot here)
+![Simulator Screenshot - iPhone 16 - 2025-04-24 at 20 05 18](https://github.com/user-attachments/assets/ff112c14-cc72-42f4-8dd3-df291894d431)
+
 
 Now force quit and restart the app, and you should see the new update information (including the message you set) reflected in the manifest info on the screen.
 
-(Insert screenshot here)
+![Simulator Screenshot - iPhone 16 - 2025-04-24 at 20 07 25](https://github.com/user-attachments/assets/6165d735-5322-44f6-af5c-98206cd861f0)
+
