@@ -1,7 +1,7 @@
 import { useUpdates, setUpdateURLAndRequestHeadersOverride } from "expo-updates"
 import { lightTheme } from "@expo/styleguide-base"
 import React, { useEffect, useState } from "react"
-import { ActivityIndicator, TextStyle, View, ViewStyle } from "react-native"
+import { ActivityIndicator, Alert, TextStyle, View, ViewStyle } from "react-native"
 
 import { ExpoAssets, ExpoDemoCard, Screen, Text, UpdateMonitor } from "../components"
 import { spacing } from "../theme"
@@ -61,6 +61,7 @@ export function UpdatesApiDemoScreen() {
         "expo-channel-name": value,
       },
     })
+    Alert.alert(`Update channel set to ${value}`, "The new channel will be used on next restart.")
   }
 
   useEffect(() => {
