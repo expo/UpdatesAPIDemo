@@ -55,13 +55,21 @@ export function UpdatesApiDemoScreen() {
 
   const setUpdateChannel = (value: CustomUpdateChannels) => {
     setPreferredUpdateChannel(value)
-    setUpdateURLAndRequestHeadersOverride({
-      updateUrl,
-      requestHeaders: {
-        "expo-channel-name": value,
-      },
-    })
-    Alert.alert(`Update channel set to ${value}`, "The new channel will be used on next restart.")
+    try {
+      setUpdateURLAndRequestHeadersOverride({
+        updateUrl,
+        requestHeaders: {
+          "expo-channel-name": value,
+        },
+      })
+      Alert.alert(`Update channel set to ${value}`, "The new channel will be used on next restart.")
+    } catch (e) {
+      console.error(e)
+      Alert.alert(
+        "Error",
+        "Failed to set update channel. it is likely you did not set PREVIEW=1 when running prebuild.",
+      )
+    }
   }
 
   useEffect(() => {
