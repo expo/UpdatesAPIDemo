@@ -51,9 +51,29 @@ export const UpdateMonitor: (props: UpdateMonitorProps) => JSX.Element = ({
 }) => {
   const updatesSystem = useUpdates()
 
-  const { isUpdateAvailable, isUpdatePending, lastCheckForUpdateTimeSinceRestart } = updatesSystem
+  const {
+    isUpdateAvailable: maybeUpdateAvailable,
+    isUpdatePending: maybeUpdatePending,
+    lastCheckForUpdateTimeSinceRestart,
+  } = updatesSystem
 
   const isUpdateCritical = isAvailableUpdateCritical(updatesSystem)
+
+  // When running with bricking measures disabled, the startup flow will download the latest update
+  // from the specified updates URL and channel, even if that update is already running, and will
+  // leave the updates state machine in the downloaded state.
+  //
+  // To avoid showing the monitor unnecessarily, we only show the monitor if the available update
+  // is different from the currently running update.
+
+  const isUpdateDifferent =
+    updatesSystem.availableUpdate?.updateId !== undefined &&
+    updatesSystem.availableUpdate?.updateId !== updatesSystem.currentlyRunning.updateId
+
+  const isUpdateAvailable = maybeUpdateAvailable && isUpdateDifferent
+
+  const isUpdatePending = maybeUpdatePending && isUpdateDifferent
+
   const lastCheckForUpdateTime = usePersistentDate(lastCheckForUpdateTimeSinceRestart)
 
   const monitorInterval = updateCheckInterval

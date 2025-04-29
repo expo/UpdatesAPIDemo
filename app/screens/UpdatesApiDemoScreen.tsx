@@ -67,7 +67,7 @@ export function UpdatesApiDemoScreen() {
       console.error(e)
       Alert.alert(
         "Error",
-        "Failed to set update channel. it is likely you did not set PREVIEW=1 when running prebuild.",
+        "Failed to set update channel. If you are attempting the demo of overriding updates URL and channel, you should ensure you set PREVIEW=1 when executing prebuild.",
       )
     }
   }
