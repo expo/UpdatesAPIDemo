@@ -45,16 +45,16 @@ When the app starts, click the button "Show monitor options". It will show that 
 
 ![Simulator Screenshot - iPhone 16 - 2025-04-24 at 20 05 09](https://github.com/user-attachments/assets/66330135-3bc0-4917-8d3c-e767cfc3a51e)
 
-If you have not done so already, create a new channel named "test". This will automatically create a branch of the same name.
+If you have not done so already, create a new channel named "test".
 
 ```bash
 eas channel:create test
 ```
 
-Now publish a new update to the "test" branch:
+Now publish a new update to the "test" channel:
 
 ```bash
-yarn update -m "First test update" -br test
+yarn update -m "First test update" -ch test
 ```
 
 Now, in the app, click the button "Updates from test channel". This will change the updates configuration to fetch updates from the "test" channel, and show an alert. The new configuration will become active the next time the app exits and restarts.
