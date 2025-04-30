@@ -96,7 +96,7 @@ export const ExpoDemoCard: (props: ExpoDemoCardProps & CardProps) => JSX.Element
       label={s.label}
       labelStyle={$cardContentText}
       value={s.value}
-      variant="checkbox"
+      variant="radio"
       onValueChange={() => s.onChange(!s.value)}
     />
   )

@@ -18,6 +18,9 @@
     "preview": {
       "extends": "production",
       "distribution": "internal",
+      "env": {
+        "PREVIEW": "1"
+      },
       "ios": {
         "simulator": true
       },

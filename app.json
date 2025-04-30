@@ -13,12 +13,15 @@
       "backgroundColor": "#191015"
     },
     "updates": {
+      "assetPatternsToBeBundled": ["app/includedImages/*"],
       "requestHeaders": {
         "expo-channel-name": "main"
       }
     },
     "jsEngine": "hermes",
+    "newArchEnabled": true,
     "android": {
+      "edgeToEdgeEnabled": true,
       "icon": "./assets/images/app-icon-android-legacy.png",
       "package": "com.updatesapidemo",
       "adaptiveIcon": {
@@ -44,18 +47,9 @@
     },
     "extra": {
       "criticalIndex": 0,
-      "message": "",
-      "updates": {
-        "assetPatternsToBeBundled": [
-          "app/includedImages/*"
-        ]
-      }
+      "message": ""
     },
-    "plugins": [
-      "expo-localization",
-      "expo-build-properties",
-      "expo-font"
-    ],
+    "plugins": ["expo-localization", "expo-build-properties", "expo-font"],
     "experiments": {
       "tsconfigPaths": true
     }

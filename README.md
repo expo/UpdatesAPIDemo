@@ -8,6 +8,7 @@ App to test out
 - Example solutions for some use cases
 - Uses the [Updates JS API](https://docs.expo.dev/versions/latest/sdk/updates/#useupdates) introduced in SDK 50
 - Uses the [expo-updates asset selection feature](./ASSETSELECTION.md) introduced in SDK 50
+- Can use the [update configuration override feature](./UPDATECONFIGURATION.md) introduced in SDK 52.
 
 Built using the [Ignite React Native boilerplate CLI](https://github.com/infinitered/ignite)
 
@@ -22,7 +23,13 @@ eas init
 eas update:configure
 ```
 
-Then you can build locally or build with EAS
+If you have not done so already, create a new updates channel in EAS named "main".
+
+```bash
+eas channel:create main
+```
+
+Then you can build locally or build with EAS.
 
 #### Build with EAS
 
@@ -55,8 +62,6 @@ yarn android:release
 After starting for the first time, see that the app is running from built-in code. Click "Show monitor options", then toggle "Monitor always visible" to show the monitor's banner view, showing that there are no available updates.
 
 ![01-embedded](./media/01-embedded.png) ![02-no-updates](./media/02-no-updates.png)
-
-_Note:_ If you are running the app for the first time, after building locally, you may see a "There is no channel named main..." error message; this is expected.
 
 ### Push an update
 
