@@ -15,7 +15,7 @@ const usage = () => {
     "    <--breakTheApp|-b> (optional) If present, introduces a bug in App.tsx that will cause a crash",
   )
   console.log(
-    "    <--branch|-br> (optional) Sets the branch passed into the EAS update command (defaults to main)",
+    "    <--channel|-ch> (optional) Sets the channel passed into the EAS update command (defaults to main)",
   )
 }
 
@@ -31,7 +31,7 @@ const incrementCriticalIndexIfNeeded = async (critical, projectRoot) => {
   return updatedCriticalIndex
 }
 
-const pushUpdateAsync = async (message, critical, breakTheApp, branch, projectRoot) => {
+const pushUpdateAsync = async (message, critical, breakTheApp, channel, projectRoot) => {
   console.log("Modifying app.json...")
   const appJsonPath = path.resolve(projectRoot, "app.json")
   const appJsonOriginalText = await fs.readFile(appJsonPath, { encoding: "utf-8" })
@@ -60,7 +60,7 @@ const pushUpdateAsync = async (message, critical, breakTheApp, branch, projectRo
   }
   console.log("Publishing update...")
 
-  await spawnAsync("eas", ["update", `--message=${message}`, `--branch=${branch}`], {
+  await spawnAsync("eas", ["update", `--message=${message}`, `--channel=${channel}`], {
     stdio: "inherit",
     path: projectRoot,
   })
@@ -78,7 +78,7 @@ const projectRoot = path.resolve(__dirname, "..")
 let message = ""
 let critical = false
 let breakTheApp = false
-let branch = "main"
+let channel = "main"
 
 while (params.length) {
   if (params[0] === "--message" || params[0] === "-m") {
@@ -91,8 +91,8 @@ while (params.length) {
   if (params[0] === "--breakTheApp" || params[0] === "-b") {
     breakTheApp = true
   }
-  if (params[0] === "--branch" || params[0] === "-br") {
-    branch = params[1]
+  if (params[0] === "--channel" || params[0] === "-ch") {
+    channel = params[1]
     params.shift()
   }
   params.shift()
@@ -106,8 +106,8 @@ if (message.length === 0) {
 console.log(`message = ${message}`)
 console.log(`critical = ${critical}`)
 console.log(`breakTheApp = ${breakTheApp}`)
-console.log(`branch = ${branch}`)
+console.log(`channel = ${channel}`)
 
-pushUpdateAsync(message, critical, breakTheApp, branch, projectRoot).catch((error) =>
+pushUpdateAsync(message, critical, breakTheApp, channel, projectRoot).catch((error) =>
   console.log(`Error in script: ${error}`),
 )
