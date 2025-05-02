@@ -180,7 +180,6 @@ export function UpdatesApiDemoScreen() {
 }
 
 const $container: ViewStyle = {
-  flex: 1,
   backgroundColor: lightTheme.background[expoVariant],
   justifyContent: "flex-start",
   alignItems: "center",
