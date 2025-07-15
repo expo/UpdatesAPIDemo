@@ -1,15 +1,21 @@
+import Constants from "expo-constants"
 import type { CurrentlyRunningInfo, UseUpdatesReturnType } from "expo-updates"
-import { ExpoConfig } from "expo/config"
+import { ExpoConfig, ExpoUpdatesManifest } from "expo/config"
 
 const expoConfig: ExpoConfig = require("../../../app.json").expo as unknown as ExpoConfig
 
 export const updateUrl: string = expoConfig.updates?.url ?? ""
 
-const isAvailableUpdateCritical = (updatesSystem: any) => {
+const isAvailableUpdateCritical = (updatesSystem: UseUpdatesReturnType) => {
+  const { currentlyRunning, availableUpdate } = updatesSystem
   const criticalIndexCurrent =
-    updatesSystem?.currentlyRunning?.manifest?.extra?.expoClient?.extra?.criticalIndex ?? 0
+    (currentlyRunning.manifest as ExpoUpdatesManifest)?.extra?.expoClient?.extra?.criticalIndex ??
+    Constants?.expoConfig?.extra?.criticalIndex ??
+    0
+
   const criticalIndexUpdate =
-    updatesSystem?.availableUpdate?.manifest?.extra?.expoClient?.extra?.criticalIndex ?? 0
+    (availableUpdate?.manifest as ExpoUpdatesManifest)?.extra?.expoClient?.extra?.criticalIndex ?? 0
+
   return criticalIndexUpdate > criticalIndexCurrent
 }
 
