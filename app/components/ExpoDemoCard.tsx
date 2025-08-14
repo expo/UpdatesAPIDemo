@@ -39,6 +39,7 @@ export interface ExpoDemoCardProps {
   title?: string
   description?: string
   actions?: ExpoDemoCardAction[]
+  additionalComponents?: React.ReactNode[]
   booleanSettings?: ExpoDemoCardBooleanSetting[]
   choiceSettings?: ExpoDemoCardChoiceSetting[]
 }
@@ -56,6 +57,7 @@ export const ExpoDemoCard: (props: ExpoDemoCardProps & CardProps) => JSX.Element
   actions = [],
   booleanSettings = [],
   choiceSettings = [],
+  additionalComponents = [],
 }) => {
   const {
     $button,
@@ -121,6 +123,7 @@ export const ExpoDemoCard: (props: ExpoDemoCardProps & CardProps) => JSX.Element
         {[
           ...booleanSettings.map((b) => renderBoolean(b)),
           ...choiceSettings.map((c) => renderChoice(c)),
+          ...additionalComponents,
         ]}
       </View>
     </View>

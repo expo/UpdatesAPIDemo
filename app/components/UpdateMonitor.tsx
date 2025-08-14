@@ -12,6 +12,7 @@ import {
   useInterval,
 } from "../utils/updates"
 import { dateDifferenceInMilliSeconds } from "../utils/updates/dateUtils"
+import { ExpoDemoProgressBar } from "./ExpoDemoProgressBar"
 
 // Wrap async expo-updates functions (errors are surfaced in useUpdates() hook so can be ignored)
 const checkForUpdate: () => Promise<string | undefined> = async () => {
@@ -55,6 +56,8 @@ export const UpdateMonitor: (props: UpdateMonitorProps) => JSX.Element = ({
     isUpdateAvailable: maybeUpdateAvailable,
     isUpdatePending: maybeUpdatePending,
     lastCheckForUpdateTimeSinceRestart,
+    downloadProgress,
+    isDownloading,
   } = updatesSystem
 
   const isUpdateCritical = isAvailableUpdateCritical(updatesSystem)
@@ -146,12 +149,27 @@ export const UpdateMonitor: (props: UpdateMonitorProps) => JSX.Element = ({
   // Expo colors: green = no update needed, blue = update available, red = critical update available
 
   const variant = isUpdateCritical ? "danger" : isUpdateAvailable ? "info" : "success"
+  const additionalComponents = isDownloading
+    ? [
+        <ExpoDemoProgressBar
+          key="progress"
+          fractionComplete={downloadProgress ?? 0}
+          variant={variant}
+        />,
+      ]
+    : []
 
   const styles = style ? [style, $container] : $container
   return (
     <View style={styles}>
       {isUpdateAvailable || alwaysVisible ? (
-        <ExpoDemoCard variant={variant} title={title} description={description} actions={actions} />
+        <ExpoDemoCard
+          variant={variant}
+          title={title}
+          description={description}
+          actions={actions}
+          additionalComponents={additionalComponents}
+        />
       ) : null}
     </View>
   )
