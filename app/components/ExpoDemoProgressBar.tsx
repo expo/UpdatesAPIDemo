@@ -16,6 +16,8 @@ export const ExpoDemoProgressBar = (props: {
     height: spacing.sm / 2,
     margin: 0,
     borderRadius: spacing.sm,
+    borderWidth: 1,
+    borderColor: theme.icon[props.variant],
   }
 
   const $progressLeft: ViewStyle = {

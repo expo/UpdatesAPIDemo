@@ -10,6 +10,7 @@ import {
   useAppState,
   usePersistentDate,
   useInterval,
+  isInDevelopmentMode,
 } from "../utils/updates"
 import { dateDifferenceInMilliSeconds } from "../utils/updates/dateUtils"
 import { ExpoDemoProgressBar } from "./ExpoDemoProgressBar"
@@ -149,7 +150,9 @@ export const UpdateMonitor: (props: UpdateMonitorProps) => JSX.Element = ({
   // Expo colors: green = no update needed, blue = update available, red = critical update available
 
   const variant = isUpdateCritical ? "danger" : isUpdateAvailable ? "info" : "success"
-  const additionalComponents = isDownloading
+  const additionalComponents = isInDevelopmentMode(updatesSystem.currentlyRunning)
+    ? [<ExpoDemoProgressBar key="progress" fractionComplete={0.4} variant={variant} />]
+    : isDownloading
     ? [
         <ExpoDemoProgressBar
           key="progress"
