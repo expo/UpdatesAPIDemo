@@ -25,7 +25,7 @@ const manifestMessage = (manifest: any) => {
 
 // Utils for constructing display text
 
-const isInDevelopmentMode = (currentlyRunning: CurrentlyRunningInfo) => {
+export const isInDevelopmentMode = (currentlyRunning: CurrentlyRunningInfo) => {
   return __DEV__ && currentlyRunning.updateId === undefined
 }
 

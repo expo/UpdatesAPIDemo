@@ -9,6 +9,7 @@ App to test out
 - Uses the [Updates JS API](https://docs.expo.dev/versions/latest/sdk/updates/#useupdates) introduced in SDK 50
 - Uses the [expo-updates asset selection feature](./ASSETSELECTION.md) introduced in SDK 50
 - Can use the [update configuration override feature](./UPDATECONFIGURATION.md) introduced in SDK 52.
+- Demonstrates [new SDK 54 updates features](https://expo.dev/changelog/sdk-54#expo-updates--eas-update) like download progress, screen options for the `reloadAsync()` method, and request headers override.
 
 Built using the [Ignite React Native boilerplate CLI](https://github.com/infinitered/ignite)
 

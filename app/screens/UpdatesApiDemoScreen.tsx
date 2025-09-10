@@ -1,4 +1,4 @@
-import { useUpdates, setUpdateURLAndRequestHeadersOverride } from "expo-updates"
+import { useUpdates, setUpdateRequestHeadersOverride, reloadAsync } from "expo-updates"
 import { lightTheme } from "@expo/styleguide-base"
 import React, { useEffect, useState } from "react"
 import { ActivityIndicator, Alert, TextStyle, View, ViewStyle } from "react-native"
@@ -10,7 +10,6 @@ import {
   currentlyRunningTitle,
   currentlyRunningDescription,
   usePersistentDate,
-  updateUrl,
 } from "../utils/updates"
 import { CheckInterval, checkIntervalFromSettings, useSettings } from "../utils/useSettings"
 
@@ -56,11 +55,8 @@ export function UpdatesApiDemoScreen() {
   const setUpdateChannel = (value: CustomUpdateChannels) => {
     setPreferredUpdateChannel(value)
     try {
-      setUpdateURLAndRequestHeadersOverride({
-        updateUrl,
-        requestHeaders: {
-          "expo-channel-name": value,
-        },
+      setUpdateRequestHeadersOverride({
+        "expo-channel-name": value,
       })
       Alert.alert(`Update channel set to ${value}`, "The new channel will be used on next restart.")
     } catch (e) {
@@ -154,6 +150,19 @@ export function UpdatesApiDemoScreen() {
           {
             label: showSettings ? "Hide monitor options" : "Show monitor options",
             onPress: () => setShowSettings(!showSettings),
+          },
+          {
+            label: "Custom reload",
+            onPress: () =>
+              reloadAsync({
+                reloadScreenOptions: {
+                  backgroundColor: "#106beb",
+                  image: require("../../assets/images/splash-logo-all.png"),
+                  imageResizeMode: "stretch",
+                  imageFullScreen: true,
+                  fade: false,
+                },
+              }),
           },
         ]}
         booleanSettings={monitorBooleanSettings}

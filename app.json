@@ -21,7 +21,6 @@
     "jsEngine": "hermes",
     "newArchEnabled": true,
     "android": {
-      "edgeToEdgeEnabled": true,
       "icon": "./assets/images/app-icon-android-legacy.png",
       "package": "com.updatesapidemo",
       "adaptiveIcon": {
