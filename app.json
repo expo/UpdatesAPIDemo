@@ -13,10 +13,15 @@
       "backgroundColor": "#191015"
     },
     "updates": {
-      "assetPatternsToBeBundled": ["app/includedImages/*"],
+      "assetPatternsToBeBundled": [
+        "app/includedImages/*",
+        "app/includedImages/*"
+      ],
       "requestHeaders": {
         "expo-channel-name": "main"
-      }
+      },
+      "disableAntiBrickingMeasures": false,
+      "url": "https://u.expo.dev/e53e89d1-6853-4d16-a300-af4a1b6827b1"
     },
     "jsEngine": "hermes",
     "newArchEnabled": true,
@@ -46,11 +51,19 @@
     },
     "extra": {
       "criticalIndex": 0,
-      "message": ""
+      "message": "",
+      "eas": {
+        "projectId": "e53e89d1-6853-4d16-a300-af4a1b6827b1"
+      }
     },
-    "plugins": ["expo-localization", "expo-build-properties", "expo-font"],
+    "plugins": [
+      "expo-localization",
+      "expo-build-properties",
+      "expo-font"
+    ],
     "experiments": {
       "tsconfigPaths": true
-    }
+    },
+    "owner": "douglowderexpo"
   }
 }
