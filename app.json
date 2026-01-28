@@ -19,7 +19,6 @@
       }
     },
     "jsEngine": "hermes",
-    "newArchEnabled": true,
     "android": {
       "icon": "./assets/images/app-icon-android-legacy.png",
       "package": "com.updatesapidemo",
