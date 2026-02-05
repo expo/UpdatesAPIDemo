@@ -4,12 +4,13 @@ https://github.com/expo/UpdatesAPIDemo/assets/6577821/a3a23f7d-bce6-4f75-b953-d3
 
 App to test out
 
-- Features provided by `expo-updates`
-- Example solutions for some use cases
-- Uses the [Updates JS API](https://docs.expo.dev/versions/latest/sdk/updates/#useupdates) introduced in SDK 50
-- Uses the [expo-updates asset selection feature](./ASSETSELECTION.md) introduced in SDK 50
-- Can use the [update configuration override feature](./UPDATECONFIGURATION.md) introduced in SDK 52.
-- Demonstrates [new SDK 54 updates features](https://expo.dev/changelog/sdk-54#expo-updates--eas-update) like download progress, screen options for the `reloadAsync()` method, and request headers override.
+- Features provided by `expo-updates`.
+- Example solutions for some use cases.
+- Uses the [Updates JS API](https://docs.expo.dev/versions/latest/sdk/updates/#useupdates), introduced in SDK 50.
+- Uses the [expo-updates asset selection feature](./ASSETSELECTION.md), introduced in SDK 50.
+- Can use the [update configuration override feature](./UPDATECONFIGURATION.md), introduced in SDK 52.
+- Demonstrates [download progress, screen options for reload, and request headers override](https://expo.dev/changelog/sdk-54#expo-updates--eas-update), introduced in SDK 54.
+- Enables [bundle diffing](https://docs.expo.dev/eas-update/bundle-diffing/#enable-bundle-diffing) for smaller update download sizes, introduced in SDK 55.
 
 Built using the [Ignite React Native boilerplate CLI](https://github.com/infinitered/ignite)
 
