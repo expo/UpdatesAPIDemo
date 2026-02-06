@@ -1,0 +1,1489 @@
+diff --git a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/DisabledUpdatesController.kt b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/DisabledUpdatesController.kt
+index bcd30c6..c2ffa85 100644
+--- a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/DisabledUpdatesController.kt
++++ b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/DisabledUpdatesController.kt
+@@ -2,6 +2,7 @@ package expo.modules.updates
+ 
+ import android.app.Activity
+ import android.content.Context
++import android.net.Uri
+ import android.os.Bundle
+ import com.facebook.react.bridge.ReactContext
+ import com.facebook.react.devsupport.interfaces.DevSupportManager
+@@ -16,6 +17,9 @@ import expo.modules.updates.procedures.RecreateReactContextProcedure
+ import expo.modules.updates.reloadscreen.ReloadScreenManager
+ import expo.modules.updates.statemachine.UpdatesStateMachine
+ import expo.modules.updates.statemachine.UpdatesStateValue
++import expo.modules.updatesinterface.UpdatesInterface
++import expo.modules.updatesinterface.UpdatesStateChangeListener
++import expo.modules.updatesinterface.UpdatesStateChangeSubscription
+ import kotlinx.coroutines.CompletableDeferred
+ import kotlinx.coroutines.CoroutineScope
+ import kotlinx.coroutines.Dispatchers
+@@ -43,7 +47,7 @@ import kotlin.time.toDuration
+ class DisabledUpdatesController(
+   private val context: Context,
+   private val fatalException: Exception?
+-) : IUpdatesController {
++) : IUpdatesController, UpdatesInterface {
+   /** Keep the activity for [RecreateReactContextProcedure] to relaunch the app. */
+   private var weakActivity: WeakReference<Activity>? = null
+   private val controllerScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+@@ -195,6 +199,14 @@ class DisabledUpdatesController(
+     controllerScope.cancel()
+   }
+ 
++  override val runtimeVersion: String? = null
++
++  override val updateUrl: Uri? = null
++
++  override fun subscribeToUpdatesStateChanges(listener: UpdatesStateChangeListener): UpdatesStateChangeSubscription {
++    return DisabledUpdatesStateChangeSubscription()
++  }
++
+   companion object {
+     private val TAG = DisabledUpdatesController::class.java.simpleName
+   }
+diff --git a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/EnabledUpdatesController.kt b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/EnabledUpdatesController.kt
+index 674946a..75cc465 100644
+--- a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/EnabledUpdatesController.kt
++++ b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/EnabledUpdatesController.kt
+@@ -2,6 +2,7 @@ package expo.modules.updates
+ 
+ import android.app.Activity
+ import android.content.Context
++import android.net.Uri
+ import android.os.Bundle
+ import com.facebook.react.bridge.ReactContext
+ import com.facebook.react.devsupport.interfaces.DevSupportManager
+@@ -11,6 +12,7 @@ import expo.modules.kotlin.exception.toCodedException
+ import expo.modules.updates.db.BuildData
+ import expo.modules.updates.db.DatabaseHolder
+ import expo.modules.updates.db.UpdatesDatabase
++import expo.modules.updates.db.entity.UpdateEntity
+ import expo.modules.updates.events.IUpdatesEventManager
+ import expo.modules.updates.events.UpdatesEventManager
+ import expo.modules.updates.launcher.Launcher.LauncherCallback
+@@ -19,6 +21,7 @@ import expo.modules.updates.logging.UpdatesErrorCode
+ import expo.modules.updates.logging.UpdatesLogReader
+ import expo.modules.updates.logging.UpdatesLogger
+ import expo.modules.updates.manifest.EmbeddedManifestUtils
++import expo.modules.updates.manifest.EmbeddedUpdate
+ import expo.modules.updates.manifest.ManifestMetadata
+ import expo.modules.updates.procedures.CheckForUpdateProcedure
+ import expo.modules.updates.procedures.FetchUpdateProcedure
+@@ -29,6 +32,9 @@ import expo.modules.updates.selectionpolicy.SelectionPolicy
+ import expo.modules.updates.selectionpolicy.SelectionPolicyFactory
+ import expo.modules.updates.statemachine.UpdatesStateMachine
+ import expo.modules.updates.statemachine.UpdatesStateValue
++import expo.modules.updatesinterface.UpdatesInterface
++import expo.modules.updatesinterface.UpdatesStateChangeListener
++import expo.modules.updatesinterface.UpdatesStateChangeSubscription
+ import kotlinx.coroutines.CompletableDeferred
+ import kotlinx.coroutines.CoroutineScope
+ import kotlinx.coroutines.Dispatchers
+@@ -41,6 +47,7 @@ import kotlinx.coroutines.sync.Mutex
+ import kotlinx.coroutines.sync.withLock
+ import java.io.File
+ import java.lang.ref.WeakReference
++import java.util.UUID
+ import kotlin.coroutines.resume
+ import kotlin.coroutines.resumeWithException
+ import kotlin.time.DurationUnit
+@@ -53,7 +60,7 @@ class EnabledUpdatesController(
+   private val context: Context,
+   private var updatesConfiguration: UpdatesConfiguration,
+   override val updatesDirectory: File
+-) : IUpdatesController {
++) : IUpdatesController, UpdatesInterface {
+   /** Keep the activity for [RelaunchProcedure] to relaunch the app. */
+   private var weakActivity: WeakReference<Activity>? = null
+   private val logger = UpdatesLogger(context.filesDir)
+@@ -70,6 +77,8 @@ class EnabledUpdatesController(
+   private val startupFinishedMutex = Mutex()
+   override val reloadScreenManager = ReloadScreenManager()
+ 
++  internal val stateChangeListenerMap: MutableMap<String, UpdatesStateChangeListener> = mutableMapOf()
++
+   private fun purgeUpdatesLogsOlderThanOneDay() {
+     UpdatesLogReader(context.filesDir).purgeLogEntries {
+       if (it != null) {
+@@ -191,11 +200,15 @@ class EnabledUpdatesController(
+     stateMachine.queueExecution(procedure)
+   }
+ 
++  private fun getEmbeddedUpdate(): UpdateEntity? {
++    return EmbeddedManifestUtils.getEmbeddedUpdate(context, updatesConfiguration)?.updateEntity
++  }
++
+   override fun getConstantsForModule(): IUpdatesController.UpdatesModuleConstants {
+     return IUpdatesController.UpdatesModuleConstants(
+       launchedUpdate = launchedUpdate,
+       launchDuration = launchDuration,
+-      embeddedUpdate = EmbeddedManifestUtils.getEmbeddedUpdate(context, updatesConfiguration)?.updateEntity,
++      embeddedUpdate = getEmbeddedUpdate(),
+       emergencyLaunchException = startupProcedure.emergencyLaunchException,
+       isEnabled = true,
+       isUsingEmbeddedAssets = isUsingEmbeddedAssets,
+@@ -306,6 +319,34 @@ class EnabledUpdatesController(
+     updatesConfiguration = UpdatesConfiguration.create(context, updatesConfiguration, configOverride)
+   }
+ 
++  // UpdatesEnabledInterface implementations
++
++  override val runtimeVersion: String?
++    get() = updatesConfiguration.runtimeVersionRaw
++
++  override val updateUrl: Uri?
++    get() = updatesConfiguration.updateUrl
++
++  override val launchedUpdateId: UUID?
++    get() = startupProcedure.launchedUpdate?.id
++
++  override val embeddedUpdateId: UUID?
++    get() = getEmbeddedUpdate()?.id
++
++  override fun subscribeToUpdatesStateChanges(listener: UpdatesStateChangeListener): UpdatesStateChangeSubscription {
++    val subscriptionId = UUID.randomUUID().toString()
++    stateChangeListenerMap[subscriptionId] = listener
++    return EnabledUpdatesStateChangeSubscription(subscriptionId = subscriptionId)
++  }
++
++  fun unsubscribeFromUpdatesStateChanges(subscriptionId: String) {
++    if (stateChangeListenerMap.containsKey(subscriptionId)) {
++      stateChangeListenerMap.remove(subscriptionId)
++    }
++  }
++
++  override val isEnabled: Boolean = true
++
+   companion object {
+     private val TAG = EnabledUpdatesController::class.java.simpleName
+   }
+diff --git a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/EnabledUpdatesController.kt.orig b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/EnabledUpdatesController.kt.orig
+new file mode 100644
+index 0000000..2db62da
+--- /dev/null
++++ b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/EnabledUpdatesController.kt.orig
+@@ -0,0 +1,335 @@
++package expo.modules.updates
++
++import android.app.Activity
++import android.content.Context
++import android.net.Uri
++import android.os.Bundle
++import com.facebook.react.bridge.ReactContext
++import com.facebook.react.devsupport.interfaces.DevSupportManager
++import expo.modules.easclient.EASClientID
++import expo.modules.kotlin.exception.CodedException
++import expo.modules.kotlin.exception.toCodedException
++import expo.modules.updates.db.BuildData
++import expo.modules.updates.db.DatabaseHolder
++import expo.modules.updates.db.UpdatesDatabase
++import expo.modules.updates.db.entity.UpdateEntity
++import expo.modules.updates.events.IUpdatesEventManager
++import expo.modules.updates.events.UpdatesEventManager
++import expo.modules.updates.launcher.Launcher.LauncherCallback
++import expo.modules.updates.loader.FileDownloader
++import expo.modules.updates.logging.UpdatesErrorCode
++import expo.modules.updates.logging.UpdatesLogReader
++import expo.modules.updates.logging.UpdatesLogger
++import expo.modules.updates.manifest.EmbeddedManifestUtils
++import expo.modules.updates.manifest.EmbeddedUpdate
++import expo.modules.updates.manifest.ManifestMetadata
++import expo.modules.updates.procedures.CheckForUpdateProcedure
++import expo.modules.updates.procedures.FetchUpdateProcedure
++import expo.modules.updates.procedures.RelaunchProcedure
++import expo.modules.updates.procedures.StartupProcedure
++import expo.modules.updates.reloadscreen.ReloadScreenManager
++import expo.modules.updates.selectionpolicy.SelectionPolicy
++import expo.modules.updates.selectionpolicy.SelectionPolicyFactory
++import expo.modules.updates.statemachine.UpdatesStateMachine
++import expo.modules.updates.statemachine.UpdatesStateValue
++import expo.modules.updatesinterface.UpdatesMetricsInterface
++import kotlinx.coroutines.CompletableDeferred
++import kotlinx.coroutines.CoroutineScope
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.SupervisorJob
++import kotlinx.coroutines.cancel
++import kotlinx.coroutines.launch
++import kotlinx.coroutines.runBlocking
++import kotlinx.coroutines.suspendCancellableCoroutine
++import kotlinx.coroutines.sync.Mutex
++import kotlinx.coroutines.sync.withLock
++import java.io.File
++import java.lang.ref.WeakReference
++import java.util.UUID
++import kotlin.coroutines.resume
++import kotlin.coroutines.resumeWithException
++import kotlin.time.DurationUnit
++import kotlin.time.toDuration
++
++/**
++ * Updates controller for applications that have updates enabled and properly-configured.
++ */
++class EnabledUpdatesController(
++  private val context: Context,
++  private var updatesConfiguration: UpdatesConfiguration,
++  override val updatesDirectory: File
++) : IUpdatesController, UpdatesMetricsInterface {
++  /** Keep the activity for [RelaunchProcedure] to relaunch the app. */
++  private var weakActivity: WeakReference<Activity>? = null
++  private val logger = UpdatesLogger(context.filesDir)
++  override val eventManager: IUpdatesEventManager = UpdatesEventManager(logger)
++
++  private val selectionPolicy: SelectionPolicy
++    get() = SelectionPolicyFactory.createFilterAwarePolicy(updatesConfiguration.getRuntimeVersion(), updatesConfiguration)
++  private val controllerScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
++  private val stateMachine = UpdatesStateMachine(logger, eventManager, UpdatesStateValue.entries.toSet(), controllerScope)
++  private val fileDownloader: FileDownloader
++    get() = FileDownloader(context.filesDir, EASClientID(context).uuid.toString(), updatesConfiguration, logger)
++  private val databaseHolder = DatabaseHolder(UpdatesDatabase.getInstance(context, Dispatchers.IO))
++  private val startupFinishedDeferred = CompletableDeferred<Unit>()
++  private val startupFinishedMutex = Mutex()
++  override val reloadScreenManager = ReloadScreenManager()
++
++  private fun purgeUpdatesLogsOlderThanOneDay() {
++    UpdatesLogReader(context.filesDir).purgeLogEntries {
++      if (it != null) {
++        logger.error("UpdatesLogReader: error in purgeLogEntries", it, UpdatesErrorCode.Unknown)
++      }
++    }
++  }
++
++  private var isStarted = false
++  private var isStartupFinished = false
++  private var startupStartTimeMillis: Long? = null
++  private var startupEndTimeMillis: Long? = null
++
++  @Synchronized
++  private fun onStartupProcedureFinished() {
++    controllerScope.launch {
++      startupFinishedMutex.withLock {
++        if (!startupFinishedDeferred.isCompleted) {
++          startupFinishedDeferred.complete(Unit)
++        }
++      }
++    }
++    isStartupFinished = true
++    startupEndTimeMillis = System.currentTimeMillis()
++  }
++
++  private val startupProcedure = StartupProcedure(
++    context,
++    updatesConfiguration,
++    databaseHolder,
++    updatesDirectory,
++    fileDownloader,
++    selectionPolicy,
++    logger,
++    object : StartupProcedure.StartupProcedureCallback {
++      override fun onFinished() {
++        onStartupProcedureFinished()
++      }
++
++      override fun onRequestRelaunch(shouldRunReaper: Boolean, callback: LauncherCallback) {
++        relaunchReactApplication(shouldRunReaper, callback)
++      }
++    },
++    controllerScope
++  )
++
++  private val launchedUpdate
++    get() = startupProcedure.launchedUpdate
++  private val launchDuration
++    get() = startupStartTimeMillis?.let { start -> startupEndTimeMillis?.let { end -> (end - start).toDuration(DurationUnit.MILLISECONDS) } }
++  private val isUsingEmbeddedAssets
++    get() = startupProcedure.isUsingEmbeddedAssets
++  private val localAssetFiles
++    get() = startupProcedure.localAssetFiles
++
++  override val launchAssetFile: String?
++    get() {
++      runBlocking {
++        startupFinishedDeferred.await()
++      }
++      return startupProcedure.launchAssetFile
++    }
++
++  override val bundleAssetName: String?
++    get() = startupProcedure.bundleAssetName
++
++  override fun onEventListenerStartObserving() {
++    stateMachine.sendContextToJS()
++  }
++
++  override fun onDidCreateDevSupportManager(devSupportManager: DevSupportManager) {
++    startupProcedure.onDidCreateDevSupportManager(devSupportManager)
++  }
++
++  override fun onDidCreateReactInstance(reactContext: ReactContext) {
++    weakActivity = WeakReference(reactContext.currentActivity)
++  }
++
++  override fun onReactInstanceException(exception: Exception) {
++    startupProcedure.onReactInstanceException(exception)
++  }
++
++  override val isActiveController = true
++
++  @Synchronized
++  override fun start() {
++    if (isStarted) {
++      return
++    }
++    isStarted = true
++    startupStartTimeMillis = System.currentTimeMillis()
++
++    purgeUpdatesLogsOlderThanOneDay()
++
++    if (!updatesConfiguration.hasUpdatesOverride) {
++      BuildData.ensureBuildDataIsConsistent(updatesConfiguration, databaseHolder.database)
++    }
++
++    stateMachine.queueExecution(startupProcedure)
++  }
++
++  private fun relaunchReactApplication(shouldRunReaper: Boolean, callback: LauncherCallback) {
++    val procedure = RelaunchProcedure(
++      context,
++      weakActivity,
++      updatesConfiguration,
++      logger,
++      databaseHolder,
++      updatesDirectory,
++      fileDownloader,
++      selectionPolicy,
++      getCurrentLauncher = { startupProcedure.launcher!! },
++      setCurrentLauncher = { currentLauncher -> startupProcedure.setLauncher(currentLauncher) },
++      shouldRunReaper = shouldRunReaper,
++      reloadScreenManager = reloadScreenManager,
++      callback,
++      controllerScope
++    )
++    stateMachine.queueExecution(procedure)
++  }
++
++  private fun getEmbeddedUpdate(): UpdateEntity? {
++    return EmbeddedManifestUtils.getEmbeddedUpdate(context, updatesConfiguration)?.updateEntity
++  }
++
++  override fun getConstantsForModule(): IUpdatesController.UpdatesModuleConstants {
++    return IUpdatesController.UpdatesModuleConstants(
++      launchedUpdate = launchedUpdate,
++      launchDuration = launchDuration,
++      embeddedUpdate = getEmbeddedUpdate(),
++      emergencyLaunchException = startupProcedure.emergencyLaunchException,
++      isEnabled = true,
++      isUsingEmbeddedAssets = isUsingEmbeddedAssets,
++      runtimeVersion = updatesConfiguration.runtimeVersionRaw,
++      checkOnLaunch = updatesConfiguration.checkOnLaunch,
++      requestHeaders = updatesConfiguration.requestHeaders,
++      localAssetFiles = localAssetFiles,
++      shouldDeferToNativeForAPIMethodAvailabilityInDevelopment = false,
++      initialContext = stateMachine.context
++    )
++  }
++
++  override suspend fun relaunchReactApplicationForModule() = suspendCancellableCoroutine { continuation ->
++    val canRelaunch = launchedUpdate != null
++    if (!canRelaunch) {
++      continuation.resumeWithException(object : CodedException("ERR_UPDATES_RELOAD", "Cannot relaunch without a launched update.", null) {})
++    } else {
++      relaunchReactApplication(
++        shouldRunReaper = true,
++        object : LauncherCallback {
++          override fun onFailure(e: Exception) {
++            continuation.resumeWithException(e.toCodedException())
++          }
++
++          override fun onSuccess() {
++            continuation.resume(Unit)
++          }
++        }
++      )
++    }
++  }
++
++  override suspend fun checkForUpdate() = suspendCancellableCoroutine { continuation ->
++    val procedure = CheckForUpdateProcedure(context, updatesConfiguration, databaseHolder, logger, fileDownloader, selectionPolicy, launchedUpdate) {
++      continuation.resume(it)
++    }
++    stateMachine.queueExecution(procedure)
++  }
++
++  override suspend fun fetchUpdate() = suspendCancellableCoroutine { continuation ->
++    val procedure = FetchUpdateProcedure(context, updatesConfiguration, logger, databaseHolder, updatesDirectory, fileDownloader, selectionPolicy, launchedUpdate) {
++      continuation.resume(it)
++    }
++    stateMachine.queueExecution(procedure)
++  }
++
++  override suspend fun getExtraParams() = suspendCancellableCoroutine { continuation ->
++    controllerScope.launch {
++      try {
++        val result = ManifestMetadata.getExtraParams(
++          databaseHolder.database,
++          updatesConfiguration
++        )
++        val resultMap = when (result) {
++          null -> Bundle()
++          else -> {
++            Bundle().apply {
++              result.forEach {
++                putString(it.key, it.value)
++              }
++            }
++          }
++        }
++        continuation.resume(resultMap)
++      } catch (e: Exception) {
++        continuation.resumeWithException(e.toCodedException())
++      }
++    }
++  }
++
++  override suspend fun setExtraParam(key: String, value: String?) = suspendCancellableCoroutine { continuation ->
++    controllerScope.launch {
++      runCatching {
++        ManifestMetadata.setExtraParam(
++          databaseHolder.database,
++          updatesConfiguration,
++          key,
++          value
++        )
++        continuation.resume(Unit)
++      }.onFailure { e ->
++        continuation.resumeWithException(e.toCodedException())
++      }
++    }
++  }
++
++  override fun shutdown() {
++    controllerScope.cancel()
++  }
++
++  override fun setUpdateURLAndRequestHeadersOverride(configOverride: UpdatesConfigurationOverride?) {
++    if (!updatesConfiguration.disableAntiBrickingMeasures) {
++      throw CodedException("ERR_UPDATES_RUNTIME_OVERRIDE", "Must set disableAntiBrickingMeasures configuration to use updates overriding", null)
++    }
++    UpdatesConfigurationOverride.save(context, configOverride)
++    updatesConfiguration = UpdatesConfiguration.create(context, updatesConfiguration, configOverride)
++  }
++
++  override fun setUpdateRequestHeadersOverride(requestHeaders: Map<String, String>?) {
++    val isValidRequestHeaders = UpdatesConfiguration.isValidRequestHeadersOverride(
++      updatesConfiguration.originalEmbeddedRequestHeaders,
++      requestHeaders
++    )
++    if (!isValidRequestHeaders) {
++      throw CodedException("ERR_UPDATES_RUNTIME_OVERRIDE", "Invalid update requestHeaders override: $requestHeaders", null)
++    }
++    val configOverride = UpdatesConfigurationOverride.saveRequestHeaders(context, requestHeaders)
++    updatesConfiguration = UpdatesConfiguration.create(context, updatesConfiguration, configOverride)
++  }
++
++  // UpdatesMetricsInterface implementations
++
++  override val runtimeVersion: String?
++    get() = updatesConfiguration.runtimeVersionRaw
++
++  override val updateUrl: Uri?
++    get() = updatesConfiguration.updateUrl
++
++  override val launchedUpdateId: UUID?
++    get() = startupProcedure.launchedUpdate?.id
++
++  override val embeddedUpdateId: UUID?
++    get() = getEmbeddedUpdate()?.id
++
++  companion object {
++    private val TAG = EnabledUpdatesController::class.java.simpleName
++  }
++}
+diff --git a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesController.kt b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesController.kt
+index 6ff694c..09a1f03 100644
+--- a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesController.kt
++++ b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesController.kt
+@@ -88,9 +88,13 @@ object UpdatesController {
+     }
+ 
+     singletonInstance = if (updatesConfiguration != null) {
+-      EnabledUpdatesController(context, updatesConfiguration, updatesDirectory)
++      val enabledUpdatesController = EnabledUpdatesController(context, updatesConfiguration, updatesDirectory)
++      UpdatesControllerRegistry.controller = WeakReference(enabledUpdatesController)
++      enabledUpdatesController
+     } else {
+-      DisabledUpdatesController(context, null)
++      val disabledUpdatesController = DisabledUpdatesController(context, null)
++      UpdatesControllerRegistry.controller = WeakReference(disabledUpdatesController)
++      disabledUpdatesController
+     }
+   }
+ 
+diff --git a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesController.kt.orig b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesController.kt.orig
+new file mode 100644
+index 0000000..34df207
+--- /dev/null
++++ b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesController.kt.orig
+@@ -0,0 +1,179 @@
++package expo.modules.updates
++
++import android.content.Context
++import com.facebook.react.ReactApplication
++import expo.modules.updates.events.IUpdatesEventManagerObserver
++import expo.modules.updates.loader.LoaderTask
++import expo.modules.updates.logging.UpdatesErrorCode
++import expo.modules.updates.logging.UpdatesLogger
++import expo.modules.updatesinterface.UpdatesControllerRegistry
++import java.lang.ref.WeakReference
++
++/**
++ * Main entry point to expo-updates. Singleton that keeps track of updates state, holds references
++ * to instances of other updates classes, and is the central hub for all updates-related tasks.
++ *
++ * The `start` method in the singleton instance of [IUpdatesController] should be invoked early in
++ * the application lifecycle, via [UpdatesPackage]. It delegates to an instance of [LoaderTask] to
++ * start the process of loading and launching an update, then responds appropriately depending on
++ * the callbacks that are invoked.
++ */
++object UpdatesController {
++  @Volatile
++  private var singletonInstance: IUpdatesController? = null
++
++  @Volatile
++  private var overrideConfiguration: UpdatesConfiguration? = null
++
++  @JvmStatic
++  val instance: IUpdatesController
++    get() {
++      return checkNotNull(singletonInstance) { "UpdatesController.instance was called before the module was initialized" }
++    }
++
++  @JvmStatic
++  fun initializeWithoutStarting(context: Context) {
++    if (singletonInstance != null) {
++      return
++    }
++    val useDeveloperSupport =
++      (context as? ReactApplication)?.reactNativeHost?.useDeveloperSupport ?: false
++    if (useDeveloperSupport && !UpdatesPackage.isUsingNativeDebug) {
++      if (BuildConfig.USE_DEV_CLIENT) {
++        val devLauncherController = initializeAsDevLauncherWithoutStarting(context)
++        singletonInstance = devLauncherController
++        UpdatesControllerRegistry.controller = WeakReference(devLauncherController)
++      } else {
++        singletonInstance = DisabledUpdatesController(context, null)
++      }
++      return
++    }
++
++    val logger = UpdatesLogger(context.filesDir)
++
++    val updatesDirectory = try {
++      UpdatesUtils.getOrCreateUpdatesDirectory(context)
++    } catch (e: Exception) {
++      logger.error(
++        "The expo-updates system is disabled due to a storage access error",
++        e,
++        UpdatesErrorCode.InitializationError
++      )
++      singletonInstance = DisabledUpdatesController(context, e)
++      return
++    }
++
++    val updatesConfiguration: UpdatesConfiguration? = overrideConfiguration ?: run {
++      when (UpdatesConfiguration.getUpdatesConfigurationValidationResult(context, null)) {
++        UpdatesConfigurationValidationResult.VALID -> {
++          return@run UpdatesConfiguration(context, null)
++        }
++
++        UpdatesConfigurationValidationResult.INVALID_NOT_ENABLED -> logger.warn(
++          "The expo-updates system is explicitly disabled. To enable it, set the enabled setting to true.",
++          UpdatesErrorCode.InitializationError
++        )
++
++        UpdatesConfigurationValidationResult.INVALID_MISSING_URL -> logger.warn(
++          "The expo-updates system is disabled due to an invalid configuration. Ensure a valid URL is supplied.",
++          UpdatesErrorCode.InitializationError
++        )
++
++        UpdatesConfigurationValidationResult.INVALID_MISSING_RUNTIME_VERSION -> logger.warn(
++          "The expo-updates system is disabled due to an invalid configuration. Ensure a runtime version is supplied.",
++          UpdatesErrorCode.InitializationError
++        )
++      }
++      return@run null
++    }
++
++    singletonInstance = if (updatesConfiguration != null) {
++      val enabledUpdatesController = EnabledUpdatesController(context, updatesConfiguration, updatesDirectory)
++      UpdatesControllerRegistry.metricsController = WeakReference(enabledUpdatesController)
++      enabledUpdatesController
++    } else {
++      DisabledUpdatesController(context, null)
++    }
++  }
++
++  private fun initializeAsDevLauncherWithoutStarting(context: Context): UpdatesDevLauncherController {
++    check(singletonInstance == null) { "UpdatesController must not be initialized prior to calling initializeAsDevLauncherWithoutStarting" }
++
++    var updatesDirectoryException: Exception? = null
++    val updatesDirectory = try {
++      UpdatesUtils.getOrCreateUpdatesDirectory(context)
++    } catch (e: Exception) {
++      updatesDirectoryException = e
++      null
++    }
++
++    val initialUpdatesConfiguration = overrideConfiguration ?: run {
++      if (UpdatesConfiguration.getUpdatesConfigurationValidationResult(
++          context,
++          null
++        ) == UpdatesConfigurationValidationResult.VALID
++      ) {
++        UpdatesConfiguration(context, null)
++      } else {
++        null
++      }
++    }
++
++    val instance = UpdatesDevLauncherController(
++      context,
++      initialUpdatesConfiguration,
++      updatesDirectory,
++      updatesDirectoryException
++    )
++    singletonInstance = instance
++    return instance
++  }
++
++  /**
++   * Initializes the UpdatesController singleton. This should be called as early as possible in the
++   * application's lifecycle. Can pass additional configuration to this method to set or override
++   * configuration values at runtime rather than just AndroidManifest.xml.
++   * @param context the base context of the application, ideally a [ReactApplication]
++   */
++  @JvmStatic
++  @Synchronized
++  fun initialize(context: Context) {
++    if (singletonInstance == null) {
++      initializeWithoutStarting(context)
++      singletonInstance?.start()
++    }
++  }
++
++  /**
++   * Overrides the [UpdatesConfiguration] that will be used inside [UpdatesController]
++   * This should be called as early as possible in the application's lifecycle.
++   * Can pass additional configuration to this method to set or override
++   * configuration values at runtime rather than just AndroidManifest.xml.
++   *
++   * @param context the base context of the application, ideally a [ReactApplication]
++   * @param configuration map of configuration pairs to override those from AndroidManifest.xml
++   */
++  @JvmStatic
++  fun overrideConfiguration(context: Context, configuration: Map<String, Any>) {
++    if (singletonInstance != null) {
++      throw AssertionError("The method should be called before UpdatesController.initialize()")
++    }
++    val updatesConfigurationValidationResult =
++      UpdatesConfiguration.getUpdatesConfigurationValidationResult(context, configuration)
++    if (updatesConfigurationValidationResult == UpdatesConfigurationValidationResult.VALID) {
++      overrideConfiguration = UpdatesConfiguration(context, configuration)
++    } else {
++      val logger = UpdatesLogger(context.filesDir)
++      logger.warn("Failed to overrideConfiguration: invalid configuration: ${updatesConfigurationValidationResult.name}")
++    }
++  }
++
++  internal fun setUpdatesEventManagerObserver(observer: WeakReference<IUpdatesEventManagerObserver>) {
++    singletonInstance?.eventManager?.observer = observer
++    singletonInstance?.onEventListenerStartObserving()
++  }
++
++  internal fun removeUpdatesEventManagerObserver() {
++    singletonInstance?.eventManager?.observer = null
++  }
++}
+diff --git a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesDevLauncherController.kt b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesDevLauncherController.kt
+index 678d5d8..2ad046a 100644
+--- a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesDevLauncherController.kt
++++ b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesDevLauncherController.kt
+@@ -29,8 +29,10 @@ import expo.modules.updates.selectionpolicy.ReaperSelectionPolicyDevelopmentClie
+ import expo.modules.updates.selectionpolicy.ReaperSelectionPolicyFilterAware
+ import expo.modules.updates.selectionpolicy.SelectionPolicy
+ import expo.modules.updates.statemachine.UpdatesStateContext
+-import expo.modules.updatesinterface.UpdatesInterface
++import expo.modules.updatesinterface.UpdatesDevLauncherInterface
+ import expo.modules.updatesinterface.UpdatesInterfaceCallbacks
++import expo.modules.updatesinterface.UpdatesStateChangeListener
++import expo.modules.updatesinterface.UpdatesStateChangeSubscription
+ import kotlinx.coroutines.CoroutineScope
+ import kotlinx.coroutines.Dispatchers
+ import kotlinx.coroutines.SupervisorJob
+@@ -56,7 +58,7 @@ class UpdatesDevLauncherController(
+   initialUpdatesConfiguration: UpdatesConfiguration?,
+   override val updatesDirectory: File?,
+   private val updatesDirectoryException: Exception?
+-) : IUpdatesController, UpdatesInterface {
++) : IUpdatesController, UpdatesDevLauncherInterface {
+   override val eventManager = NoOpUpdatesEventManager()
+   override var updatesInterfaceCallbacks: WeakReference<UpdatesInterfaceCallbacks>? = null
+ 
+@@ -138,13 +140,17 @@ class UpdatesDevLauncherController(
+   override val updateUrl: Uri?
+     get() = updatesConfiguration?.updateUrl
+ 
++  override fun subscribeToUpdatesStateChanges(listener: UpdatesStateChangeListener): UpdatesStateChangeSubscription {
++    return DisabledUpdatesStateChangeSubscription()
++  }
++
+   /**
+    * Fetch an update using a dynamically generated configuration object (including a potentially
+    * different update URL than the one embedded in the build).
+    */
+   override fun fetchUpdateWithConfiguration(
+     configuration: HashMap<String, Any>,
+-    callback: UpdatesInterface.UpdateCallback
++    callback: UpdatesDevLauncherInterface.UpdateCallback
+   ) {
+     val newUpdatesConfiguration: UpdatesConfiguration
+     try {
+@@ -260,7 +266,7 @@ class UpdatesDevLauncherController(
+     update: UpdateEntity,
+     configuration: UpdatesConfiguration,
+     fileDownloader: FileDownloader,
+-    callback: UpdatesInterface.UpdateCallback
++    callback: UpdatesDevLauncherInterface.UpdateCallback
+   ) {
+     // ensure that we launch the update we want, even if it isn't the latest one
+     val currentSelectionPolicy = selectionPolicy
+@@ -288,7 +294,7 @@ class UpdatesDevLauncherController(
+     try {
+       launcher.launch(databaseHolder.database)
+       this@UpdatesDevLauncherController.launcher = launcher
+-      callback.onSuccess(object : UpdatesInterface.Update {
++      callback.onSuccess(object : UpdatesDevLauncherInterface.Update {
+         override val manifest: JSONObject
+           get() = launcher.launchedUpdate!!.manifest
+         override val launchAssetPath: String
+diff --git a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesDevLauncherController.kt.orig b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesDevLauncherController.kt.orig
+new file mode 100644
+index 0000000..678d5d8
+--- /dev/null
++++ b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesDevLauncherController.kt.orig
+@@ -0,0 +1,380 @@
++package expo.modules.updates
++
++import android.content.Context
++import android.net.Uri
++import android.os.Bundle
++import com.facebook.react.bridge.ReactContext
++import com.facebook.react.devsupport.interfaces.DevSupportManager
++import expo.modules.easclient.EASClientID
++import expo.modules.kotlin.exception.CodedException
++import expo.modules.updates.db.DatabaseHolder
++import expo.modules.updates.db.Reaper
++import expo.modules.updates.db.UpdatesDatabase
++import expo.modules.updates.db.entity.AssetEntity
++import expo.modules.updates.db.entity.UpdateEntity
++import expo.modules.updates.events.NoOpUpdatesEventManager
++import expo.modules.updates.launcher.DatabaseLauncher
++import expo.modules.updates.launcher.Launcher
++import expo.modules.updates.loader.FileDownloader
++import expo.modules.updates.loader.Loader
++import expo.modules.updates.loader.RemoteLoader
++import expo.modules.updates.loader.UpdateDirective
++import expo.modules.updates.logging.UpdatesErrorCode
++import expo.modules.updates.logging.UpdatesLogger
++import expo.modules.updates.reloadscreen.ReloadScreenManager
++import expo.modules.updates.selectionpolicy.LauncherSelectionPolicyDevelopmentClient
++import expo.modules.updates.selectionpolicy.LauncherSelectionPolicySingleUpdate
++import expo.modules.updates.selectionpolicy.LoaderSelectionPolicyDevelopmentClient
++import expo.modules.updates.selectionpolicy.ReaperSelectionPolicyDevelopmentClient
++import expo.modules.updates.selectionpolicy.ReaperSelectionPolicyFilterAware
++import expo.modules.updates.selectionpolicy.SelectionPolicy
++import expo.modules.updates.statemachine.UpdatesStateContext
++import expo.modules.updatesinterface.UpdatesInterface
++import expo.modules.updatesinterface.UpdatesInterfaceCallbacks
++import kotlinx.coroutines.CoroutineScope
++import kotlinx.coroutines.Dispatchers
++import kotlinx.coroutines.SupervisorJob
++import kotlinx.coroutines.launch
++import kotlinx.coroutines.suspendCancellableCoroutine
++import org.json.JSONObject
++import java.io.File
++import java.lang.ref.WeakReference
++import kotlin.coroutines.resume
++
++/**
++ * Main entry point to expo-updates in development builds with expo-dev-client. Similar to EnabledUpdatesController
++ * in that it keeps track of updates state, but provides capabilities that are not usually exposed but
++ * that expo-dev-client needs (launching and downloading a specific
++ * update by URL, allowing dynamic configuration, introspecting the database). The behavior of this
++ * class differs enough that it is implemented independently from EnabledUpdatesController.
++ *
++ * Implements the external UpdatesInterface from the expo-updates-interface package. This allows
++ * expo-dev-client to compile without needing expo-updates to be installed.
++ */
++class UpdatesDevLauncherController(
++  private val context: Context,
++  initialUpdatesConfiguration: UpdatesConfiguration?,
++  override val updatesDirectory: File?,
++  private val updatesDirectoryException: Exception?
++) : IUpdatesController, UpdatesInterface {
++  override val eventManager = NoOpUpdatesEventManager()
++  override var updatesInterfaceCallbacks: WeakReference<UpdatesInterfaceCallbacks>? = null
++
++  private var launcher: Launcher? = null
++
++  private val logger = UpdatesLogger(context.filesDir)
++
++  private var previousUpdatesConfiguration: UpdatesConfiguration? = null
++  private var updatesConfiguration: UpdatesConfiguration? = initialUpdatesConfiguration
++
++  private val databaseHolder = DatabaseHolder(UpdatesDatabase.getInstance(context, Dispatchers.IO))
++  private val controllerScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
++
++  private var mSelectionPolicy: SelectionPolicy? = null
++  private var defaultSelectionPolicy: SelectionPolicy = SelectionPolicy(
++    launcherSelectionPolicy = LauncherSelectionPolicyDevelopmentClient(initialUpdatesConfiguration?.getRuntimeVersion() ?: "1", initialUpdatesConfiguration),
++    loaderSelectionPolicy = LoaderSelectionPolicyDevelopmentClient(initialUpdatesConfiguration),
++    reaperSelectionPolicy = ReaperSelectionPolicyFilterAware()
++  )
++  private val selectionPolicy: SelectionPolicy
++    get() = mSelectionPolicy ?: defaultSelectionPolicy
++
++  private fun setNextSelectionPolicy(selectionPolicy: SelectionPolicy?) {
++    mSelectionPolicy = selectionPolicy
++  }
++
++  private fun resetSelectionPolicyToDefault() {
++    mSelectionPolicy = null
++  }
++
++  private fun setDefaultSelectionPolicy(selectionPolicy: SelectionPolicy) {
++    defaultSelectionPolicy = selectionPolicy
++  }
++
++  @get:Synchronized
++  override val launchAssetFile: String?
++    get() {
++      logger.warn("launchAssetFile should not be called from expo-dev-client build, except for Detox testing")
++      return null
++    }
++
++  override val bundleAssetName: String
++    get() = throw Exception("IUpdatesController.bundleAssetName should not be called in dev client")
++
++  override val reloadScreenManager = ReloadScreenManager()
++
++  override fun onEventListenerStartObserving() {
++    // no-op for UpdatesDevLauncherController
++  }
++
++  override fun onDidCreateDevSupportManager(devSupportManager: DevSupportManager) {}
++
++  override fun onDidCreateReactInstance(reactContext: ReactContext) {}
++
++  override fun onReactInstanceException(exception: java.lang.Exception) {}
++
++  override val isActiveController = false
++
++  override fun start() {
++    // no-op for UpdatesDevLauncherController
++  }
++
++  val launchedUpdate: UpdateEntity?
++    get() = launcher?.launchedUpdate
++
++  private val localAssetFiles: Map<AssetEntity, String>?
++    get() = launcher?.localAssetFiles
++
++  private val isUsingEmbeddedAssets: Boolean
++    get() = launcher?.isUsingEmbeddedAssets ?: false
++
++  override fun reset() {
++    launcher = null
++  }
++
++  override val runtimeVersion: String?
++    get() = updatesConfiguration?.getRuntimeVersion()
++
++  override val updateUrl: Uri?
++    get() = updatesConfiguration?.updateUrl
++
++  /**
++   * Fetch an update using a dynamically generated configuration object (including a potentially
++   * different update URL than the one embedded in the build).
++   */
++  override fun fetchUpdateWithConfiguration(
++    configuration: HashMap<String, Any>,
++    callback: UpdatesInterface.UpdateCallback
++  ) {
++    val newUpdatesConfiguration: UpdatesConfiguration
++    try {
++      newUpdatesConfiguration = createUpdatesConfiguration(configuration)
++    } catch (e: Exception) {
++      callback.onFailure(e)
++      return
++    }
++    check(updatesDirectory != null)
++
++    // since controller is a singleton, save its config so we can reset to it if our request fails
++    previousUpdatesConfiguration = updatesConfiguration
++    updatesConfiguration = newUpdatesConfiguration
++
++    setDevelopmentSelectionPolicy()
++
++    val fileDownloader = FileDownloader(context.filesDir, EASClientID(context).uuid.toString(), updatesConfiguration!!, logger)
++    val loader = RemoteLoader(
++      context,
++      updatesConfiguration!!,
++      logger,
++      databaseHolder.database,
++      fileDownloader,
++      updatesDirectory,
++      null
++    )
++    controllerScope.launch {
++      val progressJob = launch {
++        loader.progressFlow.collect { progress ->
++          callback.onProgress(progress.successfulAssetCount, progress.failedAssetCount, progress.totalAssetCount)
++        }
++      }
++
++      try {
++        val loaderResult = loader.load { updateResponse ->
++          val updateDirective = updateResponse.directiveUpdateResponsePart?.updateDirective
++          if (updateDirective != null) {
++            return@load Loader.OnUpdateResponseLoadedResult(
++              shouldDownloadManifestIfPresentInResponse = when (updateDirective) {
++                is UpdateDirective.RollBackToEmbeddedUpdateDirective -> false
++                is UpdateDirective.NoUpdateAvailableUpdateDirective -> false
++              }
++            )
++          }
++
++          val update = updateResponse.manifestUpdateResponsePart?.update
++            ?: return@load Loader.OnUpdateResponseLoadedResult(shouldDownloadManifestIfPresentInResponse = false)
++          Loader.OnUpdateResponseLoadedResult(shouldDownloadManifestIfPresentInResponse = callback.onManifestLoaded(update.manifest.getRawJson()))
++        }
++
++        // the dev launcher doesn't handle roll back to embedded commands
++        if (loaderResult.updateEntity == null) {
++          callback.onSuccess(null)
++          return@launch
++        }
++        launchUpdate(loaderResult.updateEntity, updatesConfiguration!!, fileDownloader, callback)
++      } catch (e: Exception) {
++        // reset controller's configuration to what it was before this request
++        updatesConfiguration = previousUpdatesConfiguration
++        callback.onFailure(e)
++      } finally {
++        progressJob.cancel()
++      }
++    }
++  }
++
++  override fun isValidUpdatesConfiguration(configuration: HashMap<String, Any>): Boolean {
++    return try {
++      createUpdatesConfiguration(configuration)
++      true
++    } catch (e: Exception) {
++      logger.error("Invalid updates configuration", e, UpdatesErrorCode.InitializationError)
++      false
++    }
++  }
++
++  @Throws(Exception::class)
++  private fun createUpdatesConfiguration(configuration: HashMap<String, Any>): UpdatesConfiguration {
++    if (updatesDirectory == null) {
++      throw updatesDirectoryException!!
++    }
++
++    return when (UpdatesConfiguration.getUpdatesConfigurationValidationResult(context, configuration)) {
++      UpdatesConfigurationValidationResult.VALID -> UpdatesConfiguration(context, configuration)
++      UpdatesConfigurationValidationResult.INVALID_NOT_ENABLED -> {
++        throw Exception("Failed to load update: UpdatesConfiguration object is not enabled")
++      }
++
++      UpdatesConfigurationValidationResult.INVALID_MISSING_URL -> {
++        throw Exception("Failed to load update: UpdatesConfiguration object must include a valid update URL")
++      }
++
++      UpdatesConfigurationValidationResult.INVALID_MISSING_RUNTIME_VERSION -> {
++        throw Exception("Failed to load update: UpdatesConfiguration object must include a valid runtime version")
++      }
++    }
++  }
++
++  private fun setDevelopmentSelectionPolicy() {
++    resetSelectionPolicyToDefault()
++    val currentSelectionPolicy = selectionPolicy
++    setDefaultSelectionPolicy(
++      SelectionPolicy(
++        currentSelectionPolicy.launcherSelectionPolicy,
++        currentSelectionPolicy.loaderSelectionPolicy,
++        ReaperSelectionPolicyDevelopmentClient()
++      )
++    )
++    resetSelectionPolicyToDefault()
++  }
++
++  private suspend fun launchUpdate(
++    update: UpdateEntity,
++    configuration: UpdatesConfiguration,
++    fileDownloader: FileDownloader,
++    callback: UpdatesInterface.UpdateCallback
++  ) {
++    // ensure that we launch the update we want, even if it isn't the latest one
++    val currentSelectionPolicy = selectionPolicy
++    // Calling `setNextSelectionPolicy` allows the Updates module's `reloadAsync` method to reload
++    // with a different (newer) update if one is downloaded, e.g. using `fetchUpdateAsync`. If we
++    // set the default selection policy here instead, the update we are launching here would keep
++    // being launched by `reloadAsync` even if a newer one is downloaded.
++    setNextSelectionPolicy(
++      SelectionPolicy(
++        LauncherSelectionPolicySingleUpdate(update.id),
++        currentSelectionPolicy.loaderSelectionPolicy,
++        currentSelectionPolicy.reaperSelectionPolicy
++      )
++    )
++
++    val launcher = DatabaseLauncher(
++      context,
++      configuration,
++      updatesDirectory!!,
++      fileDownloader,
++      selectionPolicy,
++      logger,
++      controllerScope
++    )
++    try {
++      launcher.launch(databaseHolder.database)
++      this@UpdatesDevLauncherController.launcher = launcher
++      callback.onSuccess(object : UpdatesInterface.Update {
++        override val manifest: JSONObject
++          get() = launcher.launchedUpdate!!.manifest
++        override val launchAssetPath: String
++          get() = launcher.launchAssetFile!!
++      })
++      runReaper()
++    } catch (e: Exception) {
++      // reset controller's configuration to what it was before this request
++      updatesConfiguration = previousUpdatesConfiguration
++      callback.onFailure(e)
++    }
++  }
++
++  private fun getDatabase(): UpdatesDatabase = databaseHolder.database
++
++  private fun runReaper() {
++    controllerScope.launch {
++      updatesConfiguration?.let {
++        val databaseLocal = getDatabase()
++        Reaper.reapUnusedUpdates(
++          it,
++          databaseLocal,
++          updatesDirectory,
++          launchedUpdate,
++          selectionPolicy
++        )
++      }
++    }
++  }
++
++  class NotAvailableInDevClientException(message: String) : CodedException(message)
++
++  override fun getConstantsForModule(): IUpdatesController.UpdatesModuleConstants {
++    return IUpdatesController.UpdatesModuleConstants(
++      launchedUpdate = launchedUpdate,
++      launchDuration = null,
++      embeddedUpdate = null, // no embedded update in debug builds
++      emergencyLaunchException = updatesDirectoryException,
++      isEnabled = true,
++      isUsingEmbeddedAssets = isUsingEmbeddedAssets,
++      runtimeVersion = updatesConfiguration?.runtimeVersionRaw ?: "1",
++      checkOnLaunch = updatesConfiguration?.checkOnLaunch ?: UpdatesConfiguration.CheckAutomaticallyConfiguration.ALWAYS,
++      requestHeaders = updatesConfiguration?.requestHeaders ?: mapOf(),
++      localAssetFiles = localAssetFiles,
++      shouldDeferToNativeForAPIMethodAvailabilityInDevelopment = true,
++      initialContext = UpdatesStateContext()
++    )
++  }
++
++  override suspend fun relaunchReactApplicationForModule() = suspendCancellableCoroutine { continuation ->
++    this.updatesInterfaceCallbacks?.get()?.onRequestRelaunch()
++    continuation.resume(Unit)
++  }
++
++  override suspend fun checkForUpdate(): IUpdatesController.CheckForUpdateResult {
++    throw NotAvailableInDevClientException("Updates.checkForUpdateAsync() is not supported in development builds.")
++  }
++
++  override suspend fun fetchUpdate(): IUpdatesController.FetchUpdateResult {
++    throw NotAvailableInDevClientException("Updates.fetchUpdateAsync() is not supported in development builds.")
++  }
++
++  override suspend fun getExtraParams(): Bundle {
++    throw NotAvailableInDevClientException("Updates.getExtraParamsAsync() is not supported in development builds.")
++  }
++
++  override suspend fun setExtraParam(
++    key: String,
++    value: String?
++  ) {
++    throw NotAvailableInDevClientException("Updates.setExtraParamAsync() is not supported in development builds.")
++  }
++
++  override fun setUpdateURLAndRequestHeadersOverride(configOverride: UpdatesConfigurationOverride?) {
++    throw NotAvailableInDevClientException("Updates.setUpdateURLAndRequestHeadersOverride() is not supported in development builds.")
++  }
++
++  override fun setUpdateRequestHeadersOverride(requestHeaders: Map<String, String>?) {
++    throw NotAvailableInDevClientException("Updates.setUpdateRequestHeadersOverride() is not supported in development builds.")
++  }
++
++  override fun shutdown() {
++    // no-op
++  }
++
++  companion object {
++    private val TAG = UpdatesDevLauncherController::class.java.simpleName
++  }
++}
+diff --git a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesStateChangeSubscription.kt b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesStateChangeSubscription.kt
+new file mode 100644
+index 0000000..57d3bfe
+--- /dev/null
++++ b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesStateChangeSubscription.kt
+@@ -0,0 +1,14 @@
++package expo.modules.updates
++
++import expo.modules.updatesinterface.UpdatesStateChangeSubscription
++
++class DisabledUpdatesStateChangeSubscription : UpdatesStateChangeSubscription {
++  override fun remove() {}
++}
++
++class EnabledUpdatesStateChangeSubscription(val subscriptionId: String) : UpdatesStateChangeSubscription {
++  override fun remove() {
++    val updatesController: EnabledUpdatesController? = UpdatesController.instance as EnabledUpdatesController
++    updatesController?.unsubscribeFromUpdatesStateChanges(subscriptionId)
++  }
++}
+diff --git a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/statemachine/UpdatesStateMachine.kt b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/statemachine/UpdatesStateMachine.kt
+index e8b6f2a..6e8f8d3 100644
+--- a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/statemachine/UpdatesStateMachine.kt
++++ b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/statemachine/UpdatesStateMachine.kt
+@@ -1,9 +1,12 @@
+ package expo.modules.updates.statemachine
+ 
++import expo.modules.manifests.core.toMap
++import expo.modules.updates.EnabledUpdatesController
+ import expo.modules.updates.events.IUpdatesEventManager
+ import expo.modules.updates.logging.UpdatesLogger
+ import expo.modules.updates.procedures.StateMachineProcedure
+ import expo.modules.updates.procedures.StateMachineSerialExecutorQueue
++import expo.modules.updatesinterface.UpdatesControllerRegistry
+ import kotlinx.coroutines.CoroutineScope
+ import kotlinx.coroutines.Dispatchers
+ import java.util.Date
+@@ -65,6 +68,18 @@ class UpdatesStateMachine(
+     sendContextToJS()
+   }
+ 
++  private fun toMap(event: UpdatesStateEvent): Map<String, Any> {
++    return when (event) {
++      is UpdatesStateEvent.DownloadCompleteWithUpdate -> mapOf("type" to event.type.type, "manifest" to event.manifest.toMap())
++      is UpdatesStateEvent.CheckCompleteWithUpdate -> mapOf("type" to "checkCompleteWithUpdate", "manifest" to event.manifest.toMap())
++      is UpdatesStateEvent.CheckCompleteWithRollback -> mapOf("type" to "checkCompleteWithRollback")
++      is UpdatesStateEvent.CheckError -> mapOf("type" to event.type.type, "errorMessage" to event.error.message)
++      is UpdatesStateEvent.DownloadError -> mapOf("type" to event.type.type, "errorMessage" to event.error.message)
++      is UpdatesStateEvent.DownloadProgress -> mapOf("type" to event.type.type, "progress" to event.progress)
++      else -> mapOf("type" to event.type.type)
++    }
++  }
++
+   /**
+    * Transition the state machine forward to a new state.
+    */
+@@ -72,6 +87,14 @@ class UpdatesStateMachine(
+     if (transition(event)) {
+       context = reduceContext(context, event)
+       logger.info("Updates state change: ${event.type}, context = ${context.json}")
++      UpdatesControllerRegistry.controller?.get()?.let {
++        if (it is EnabledUpdatesController) {
++          // Notify the controller state change listener
++          it.stateChangeListenerMap.keys.forEach { key ->
++            it.stateChangeListenerMap[key]?.updatesStateDidChange(toMap(event))
++          }
++        }
++      }
+       sendContextToJS()
+     }
+   }
+diff --git a/node_modules/expo-updates/ios/EXUpdates/AppController.swift b/node_modules/expo-updates/ios/EXUpdates/AppController.swift
+index ba63b60..15a2501 100644
+--- a/node_modules/expo-updates/ios/EXUpdates/AppController.swift
++++ b/node_modules/expo-updates/ios/EXUpdates/AppController.swift
+@@ -219,9 +219,10 @@ public class AppController: NSObject {
+       // which expo-dev-client can access.
+       let devLauncherController = initializeAsDevLauncherWithoutStarting()
+       _sharedInstance = devLauncherController
+-      UpdatesControllerRegistry.sharedInstance.controller = devLauncherController
++      UpdatesControllerRegistry.sharedInstance.controller = devLauncherController as (any UpdatesDevLauncherInterface)
+       #else
+       _sharedInstance = DisabledAppController(error: nil)
++      UpdatesControllerRegistry.sharedInstance.controller = _sharedInstance as? (any UpdatesInterface)
+       #endif
+       return
+     }
+@@ -273,6 +274,7 @@ public class AppController: NSObject {
+         let directory = try initializeUpdatesDirectory()
+         try initializeUpdatesDatabase(updatesDatabase: updatesDatabase, inUpdatesDirectory: directory, logger: logger)
+         _sharedInstance = EnabledAppController(config: config, database: updatesDatabase, updatesDirectory: directory)
++        UpdatesControllerRegistry.sharedInstance.controller = _sharedInstance as? (any UpdatesInterface)
+       } catch {
+         let cause = UpdatesError.appControllerInitializationError(cause: error)
+         logger.error(
+@@ -280,6 +282,7 @@ public class AppController: NSObject {
+           code: .initializationError
+         )
+         _sharedInstance = DisabledAppController(error: cause)
++        UpdatesControllerRegistry.sharedInstance.controller = _sharedInstance as? (any UpdatesInterface)
+         return
+       }
+     } else {
+diff --git a/node_modules/expo-updates/ios/EXUpdates/DevLauncherAppController.swift b/node_modules/expo-updates/ios/EXUpdates/DevLauncherAppController.swift
+index f41a8dd..5b750ec 100644
+--- a/node_modules/expo-updates/ios/EXUpdates/DevLauncherAppController.swift
++++ b/node_modules/expo-updates/ios/EXUpdates/DevLauncherAppController.swift
+@@ -45,14 +45,24 @@ enum DevLauncherAppControllerError: Int, Error, LocalizedError {
+  */
+ @objc(EXUpdatesDevLauncherController)
+ @objcMembers
+-public final class DevLauncherAppController: NSObject, InternalAppControllerInterface, UpdatesExternalInterface {
++public final class DevLauncherAppController: NSObject, InternalAppControllerInterface, UpdatesDevLauncherInterface {
++  public func subscribeToUpdatesStateChanges(_ listener: any UpdatesStateChangeListener) -> UpdatesStateChangeSubscription {
++    return DisabledUpdatesStateChangeSubscription()
++  }
++
++  public var launchedUpdateId: UUID?
++
++  public var embeddedUpdateId: UUID?
++
++  public var isEnabled: Bool
++
+   public let eventManager: UpdatesEventManager = NoOpUpdatesEventManager()
+   public var reloadScreenManager: Reloadable? = ReloadScreenManager()
+ 
+   private let logger = UpdatesLogger()
+ 
+-  public weak var delegate: AppControllerDelegate?
+-  public weak var updatesExternalInterfaceDelegate: (any EXUpdatesInterface.UpdatesExternalInterfaceDelegate)?
++  public var delegate: AppControllerDelegate?
++  public var updatesExternalInterfaceDelegate: (any UpdatesExternalInterfaceDelegate)?
+ 
+   public func launchAssetUrl() -> URL? {
+     return launcher?.launchAssetUrl
+@@ -107,7 +117,7 @@ public final class DevLauncherAppController: NSObject, InternalAppControllerInte
+       loaderSelectionPolicy: LoaderSelectionPolicyDevelopmentClient(config: self.config),
+       reaperSelectionPolicy: ReaperSelectionPolicyDevelopmentClient()
+     )
+-
++    self.isEnabled = false
+     super.init()
+   }
+ 
+diff --git a/node_modules/expo-updates/ios/EXUpdates/DisabledAppController.swift b/node_modules/expo-updates/ios/EXUpdates/DisabledAppController.swift
+index 50422d3..5cb7497 100644
+--- a/node_modules/expo-updates/ios/EXUpdates/DisabledAppController.swift
++++ b/node_modules/expo-updates/ios/EXUpdates/DisabledAppController.swift
+@@ -1,6 +1,11 @@
+ //  Copyright © 2019 650 Industries. All rights reserved.
+ 
+ import ExpoModulesCore
++import EXUpdatesInterface
++
++internal class DisabledUpdatesStateChangeSubscription: UpdatesStateChangeSubscription {
++  func remove() {}
++}
+ 
+ /**
+  * Updates controller for applications that either disable updates explicitly or have an error
+@@ -9,7 +14,15 @@ import ExpoModulesCore
+  * - Internal database initialization errors
+  * - Configuration errors (missing required configuration)
+  */
+-public class DisabledAppController: InternalAppControllerInterface {
++public class DisabledAppController: InternalAppControllerInterface, UpdatesInterface {
++  public func subscribeToUpdatesStateChanges(_ listener: any UpdatesStateChangeListener) -> UpdatesStateChangeSubscription {
++    return DisabledUpdatesStateChangeSubscription()
++  }
++
++  public var launchedUpdateId: UUID?
++
++  public var embeddedUpdateId: UUID?
++
+   public var reloadScreenManager: Reloadable?
+ 
+   public let isActiveController = false
+@@ -102,6 +115,14 @@ public class DisabledAppController: InternalAppControllerInterface {
+     )
+   }
+ 
++  // MARK: UpdatesInterface
++
++  public var runtimeVersion: String?
++
++  public var updateURL: URL?
++
++  public var isEnabled: Bool = false
++
+   public func requestRelaunch(
+     success successBlockArg: @escaping () -> Void,
+     error errorBlockArg: @escaping (ExpoModulesCore.Exception) -> Void
+diff --git a/node_modules/expo-updates/ios/EXUpdates/EnabledAppController.swift b/node_modules/expo-updates/ios/EXUpdates/EnabledAppController.swift
+index 861d698..e0b63fe 100644
+--- a/node_modules/expo-updates/ios/EXUpdates/EnabledAppController.swift
++++ b/node_modules/expo-updates/ios/EXUpdates/EnabledAppController.swift
+@@ -2,11 +2,26 @@
+ 
+ import SwiftUI
+ import ExpoModulesCore
++import EXUpdatesInterface
++
++internal class EnabledUpdatesStateChangeSubscription: UpdatesStateChangeSubscription {
++  private let subscriptionId: String
++
++  required init(_ subscriptionId: String) {
++    self.subscriptionId = subscriptionId
++  }
++
++  func remove() {
++    if let updatesController = AppController.sharedInstance as? EnabledAppController {
++      updatesController.unsubscribeFromUpdatesStateChanges(subscriptionId)
++    }
++  }
++}
+ 
+ /**
+  * Updates controller for applications that have updates enabled and properly-configured.
+  */
+-public class EnabledAppController: InternalAppControllerInterface, StartupProcedureDelegate {
++public class EnabledAppController: InternalAppControllerInterface, UpdatesInterface, StartupProcedureDelegate {
+   public weak var delegate: AppControllerDelegate?
+   public var reloadScreenManager: Reloadable? = ReloadScreenManager()
+ 
+@@ -157,6 +172,42 @@ public class EnabledAppController: InternalAppControllerInterface, StartupProced
+     stateMachine.queueExecution(stateMachineProcedure: procedure)
+   }
+ 
++  // MARK: - UpdatesInterface
++
++  internal var stateChangeListeners: [String: any UpdatesStateChangeListener] = [:]
++
++  public func subscribeToUpdatesStateChanges(_ listener: any UpdatesStateChangeListener) -> UpdatesStateChangeSubscription {
++    let subscriptionId = UUID().uuidString
++    let subscription = EnabledUpdatesStateChangeSubscription(subscriptionId)
++
++    stateChangeListeners[subscriptionId] = listener
++    return subscription
++  }
++
++  internal func unsubscribeFromUpdatesStateChanges(_ subscriptionId: String) {
++    if stateChangeListeners[subscriptionId] != nil {
++      stateChangeListeners.removeValue(forKey: subscriptionId)
++    }
++  }
++
++  public var runtimeVersion: String? {
++    return config.runtimeVersion
++  }
++
++  public var updateURL: URL? {
++    return config.updateUrl
++  }
++
++  public var launchedUpdateId: UUID? {
++    return startupProcedure.launchedUpdate()?.updateId
++  }
++
++  public var embeddedUpdateId: UUID? {
++    return getEmbeddedUpdate()?.updateId
++  }
++
++  public var isEnabled: Bool = true
++
+   // MARK: - Internal
+ 
+   private func purgeUpdatesLogsOlderThanOneDay() {
+diff --git a/node_modules/expo-updates/ios/EXUpdates/Multipart/UpdatesMultipartStreamReader.swift b/node_modules/expo-updates/ios/EXUpdates/Multipart/UpdatesMultipartStreamReader.swift
+index 5a17341..ef572ed 100644
+--- a/node_modules/expo-updates/ios/EXUpdates/Multipart/UpdatesMultipartStreamReader.swift
++++ b/node_modules/expo-updates/ios/EXUpdates/Multipart/UpdatesMultipartStreamReader.swift
+@@ -162,8 +162,10 @@ public final class UpdatesMultipartStreamReader {
+   }
+ }
+ 
++// swiftlint:disable legacy_objc_type
+ private extension Data {
+   func range(of data: Data, options: Data.SearchOptions = [], in range: NSRange) -> NSRange {
+     return (self as NSData).range(of: data, options: options, in: range)
+   }
+ }
++// swiftlint:enable legacy_objc_type
+diff --git a/node_modules/expo-updates/ios/EXUpdates/UpdatesStateMachine.swift b/node_modules/expo-updates/ios/EXUpdates/UpdatesStateMachine.swift
+index 6ce3173..a4c86db 100644
+--- a/node_modules/expo-updates/ios/EXUpdates/UpdatesStateMachine.swift
++++ b/node_modules/expo-updates/ios/EXUpdates/UpdatesStateMachine.swift
+@@ -3,6 +3,7 @@
+ // swiftlint:disable no_grouping_extension
+ 
+ import Foundation
++import EXUpdatesInterface
+ 
+ // MARK: - Enums
+ 
+@@ -84,6 +85,23 @@ internal enum UpdatesStateEvent {
+       return .restart
+     }
+   }
++
++  var toMap: [String: Any] {
++    switch self {
++    case .checkCompleteWithUpdate(manifest: let manifest):
++      return ["type": "checkCompleteWithUpdate", "manifest": manifest]
++    case .downloadCompleteWithUpdate(manifest: let manifest):
++      return ["type": "downloadCompleteWithUpdate", "manifest": manifest]
++    case .checkError(errorMessage: let errorMessage):
++      return ["type": type, "errorMessage": errorMessage]
++    case .downloadError(errorMessage: let errorMessage):
++      return ["type": type, "errorMessage": errorMessage]
++    case .downloadProgress(progress: let progress):
++      return ["type": type, "progress": progress]
++    default:
++      return ["type": type]
++    }
++  }
+ }
+ 
+ /**
+@@ -317,6 +335,14 @@ internal class UpdatesStateMachine {
+       // Only change context if transition succeeds
+       context = reducedContext(context, event)
+       logger.info(message: "Updates state change: state = \(state), event = \(event.type), context = \(context)")
++      // Notify the controller state change listener
++      if let controller = UpdatesControllerRegistry.sharedInstance.controller as? EnabledAppController {
++        controller.stateChangeListeners.keys.forEach {subscriptionId in
++          if let listener = controller.stateChangeListeners[subscriptionId] {
++            listener.updatesStateDidChange(event.toMap)
++          }
++        }
++      }
+       sendContextToJS()
+     }
+   }
