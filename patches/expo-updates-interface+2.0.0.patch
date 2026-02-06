@@ -98,10 +98,10 @@ index 102f598..4df3a13 100644
    public static let sharedInstance = UpdatesControllerRegistry()
  }
 diff --git a/node_modules/expo-updates-interface/ios/EXUpdatesInterface/UpdatesExternalInterface.swift b/node_modules/expo-updates-interface/ios/EXUpdatesInterface/UpdatesExternalInterface.swift
-index 8e12881..a545cc1 100644
+index 8e12881..7fa5108 100644
 --- a/node_modules/expo-updates-interface/ios/EXUpdatesInterface/UpdatesExternalInterface.swift
 +++ b/node_modules/expo-updates-interface/ios/EXUpdatesInterface/UpdatesExternalInterface.swift
-@@ -15,11 +15,37 @@ public typealias UpdatesProgressBlock = (_ successfulAssetCount: UInt, _ failedA
+@@ -15,13 +15,39 @@ public typealias UpdatesProgressBlock = (_ successfulAssetCount: UInt, _ failedA
  public typealias UpdatesManifestBlock = (_ manifest: [String: Any]) -> Bool
  
  /**
@@ -112,6 +112,7 @@ index 8e12881..a545cc1 100644
   */
 -@objc(EXUpdatesExternalInterface)
 -public protocol UpdatesExternalInterface {
+-  @objc weak var updatesExternalInterfaceDelegate: (any UpdatesExternalInterfaceDelegate)? { get set }
 +@objc(EXUpdatesInterface)
 +public protocol UpdatesInterface {
 +  /*
@@ -128,6 +129,7 @@ index 8e12881..a545cc1 100644
 +   */
 +  @objc var launchedUpdateId: UUID? { get }
 +  @objc var embeddedUpdateId: UUID? { get }
+   @objc var launchAssetURL: URL? { get }
 +  /*
 +   * User code or third party modules can add a listener that will be called
 +   * on updates state machine transitions (only when updates is enabled)
@@ -140,9 +142,10 @@ index 8e12881..a545cc1 100644
 + */
 +@objc(EXUpdatesDevLauncherInterface)
 +public protocol UpdatesDevLauncherInterface: UpdatesInterface {
-   @objc weak var updatesExternalInterfaceDelegate: (any UpdatesExternalInterfaceDelegate)? { get set }
-   @objc var launchAssetURL: URL? { get }
++  @objc weak var updatesExternalInterfaceDelegate: (any UpdatesExternalInterfaceDelegate)? { get set }
  
+   @objc var runtimeVersion: String? { get }
+   @objc var updateURL: URL? { get }
 @@ -44,5 +70,18 @@ public protocol UpdatesExternalInterface {
   */
  @objc(EXUpdatesExternalInterfaceDelegate)
