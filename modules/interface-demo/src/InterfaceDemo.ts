@@ -80,3 +80,7 @@ export function getEmbeddedUpdateId() {
 export function getLaunchedUpdateId() {
   return interfaceDemoModule?.getLaunchedUpdateId() ?? "unavailable"
 }
+
+export function getLaunchAssetUrl() {
+  return interfaceDemoModule?.getLaunchAssetUrl() ?? "unavailable"
+}
