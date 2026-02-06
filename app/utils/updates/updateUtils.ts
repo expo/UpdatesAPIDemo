@@ -1,6 +1,11 @@
 import Constants from "expo-constants"
-import type { CurrentlyRunningInfo, UseUpdatesReturnType } from "expo-updates"
+import { type CurrentlyRunningInfo, type UseUpdatesReturnType } from "expo-updates"
 import { ExpoConfig, ExpoUpdatesManifest } from "expo/config"
+import {
+  getLaunchAssetUrl,
+  getLaunchedUpdateId,
+  getRuntimeVersion,
+} from "../../../modules/interface-demo"
 
 const expoConfig: ExpoConfig = require("../../../app.json").expo as unknown as ExpoConfig
 
@@ -41,12 +46,13 @@ const currentlyRunningDescription = (
   lastCheckForUpdateTime?: Date,
 ) => {
   return (
-    ` ID: ${currentlyRunning.updateId}\n` +
+    ` ID: ${getLaunchedUpdateId()}\n` +
     ` Created: ${currentlyRunning.createdAt?.toISOString()}\n` +
     ` Channel: ${currentlyRunning.channel}\n` +
-    ` Runtime Version: ${currentlyRunning.runtimeVersion}\n` +
+    ` Runtime Version: ${getRuntimeVersion()}\n` +
     ` Message: ${manifestMessage(currentlyRunning.manifest)}\n` +
-    ` Last check: ${lastCheckForUpdateTime?.toISOString()}\n`
+    ` Last check: ${lastCheckForUpdateTime?.toISOString()}\n` +
+    ` Launch URL from module: ${getLaunchAssetUrl()}\n`
   )
 }
 
