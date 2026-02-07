@@ -1,5 +1,9 @@
 import Constants from "expo-constants"
-import type { CurrentlyRunningInfo, UseUpdatesReturnType } from "expo-updates"
+import {
+  type CurrentlyRunningInfo,
+  type UseUpdatesReturnType,
+  getLaunchAssetPath,
+} from "expo-updates"
 import { ExpoConfig, ExpoUpdatesManifest } from "expo/config"
 
 const expoConfig: ExpoConfig = require("../../../app.json").expo as unknown as ExpoConfig
@@ -46,7 +50,8 @@ const currentlyRunningDescription = (
     ` Channel: ${currentlyRunning.channel}\n` +
     ` Runtime Version: ${currentlyRunning.runtimeVersion}\n` +
     ` Message: ${manifestMessage(currentlyRunning.manifest)}\n` +
-    ` Last check: ${lastCheckForUpdateTime?.toISOString()}\n`
+    ` Last check: ${lastCheckForUpdateTime?.toISOString()}\n` +
+    ` Launch asset path: ${getLaunchAssetPath()}\n`
   )
 }
 
