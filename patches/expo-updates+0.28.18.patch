@@ -1,0 +1,101 @@
+diff --git a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesModule.kt b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesModule.kt
+index ba785a9..d0a80b7 100644
+--- a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesModule.kt
++++ b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesModule.kt
+@@ -161,6 +161,10 @@ class UpdatesModule : Module(), IUpdatesEventManagerObserver {
+     Function("setUpdateURLAndRequestHeadersOverride") { configOverride: UpdatesConfigurationOverrideParam? ->
+       UpdatesController.instance.setUpdateURLAndRequestHeadersOverride(configOverride?.toUpdatesConfigurationOverride())
+     }
++
++    Function("getLaunchAssetPath") { ->
++      UpdatesController.instance.launchAssetFile ?: "undefined"
++    }
+   }
+ 
+   companion object {
+diff --git a/node_modules/expo-updates/build/ExpoUpdatesModule.types.d.ts b/node_modules/expo-updates/build/ExpoUpdatesModule.types.d.ts
+index f1ea7e2..2df55ae 100644
+--- a/node_modules/expo-updates/build/ExpoUpdatesModule.types.d.ts
++++ b/node_modules/expo-updates/build/ExpoUpdatesModule.types.d.ts
+@@ -99,5 +99,6 @@ export declare class ExpoUpdatesModule extends NativeModule<UpdatesEvents> imple
+     } | {
+         manifest: Manifest;
+     })) | UpdateFetchResultFailure | UpdateFetchResultRollBackToEmbedded>;
++    getLaunchAssetPath: () => string;
+ }
+ //# sourceMappingURL=ExpoUpdatesModule.types.d.ts.map
+\ No newline at end of file
+diff --git a/node_modules/expo-updates/build/Updates.d.ts b/node_modules/expo-updates/build/Updates.d.ts
+index f4d2c45..9315dd0 100644
+--- a/node_modules/expo-updates/build/Updates.d.ts
++++ b/node_modules/expo-updates/build/Updates.d.ts
+@@ -185,4 +185,5 @@ export declare function setUpdateURLAndRequestHeadersOverride(configOverride: {
+     updateUrl: string;
+     requestHeaders: Record<string, string>;
+ } | null): void;
++export declare function getLaunchAssetPath(): string;
+ //# sourceMappingURL=Updates.d.ts.map
+\ No newline at end of file
+diff --git a/node_modules/expo-updates/build/Updates.js b/node_modules/expo-updates/build/Updates.js
+index ea1a1ef..6191479 100644
+--- a/node_modules/expo-updates/build/Updates.js
++++ b/node_modules/expo-updates/build/Updates.js
+@@ -253,4 +253,14 @@ export async function fetchUpdateAsync() {
+ export function setUpdateURLAndRequestHeadersOverride(configOverride) {
+     ExpoUpdates.setUpdateURLAndRequestHeadersOverride(configOverride);
+ }
++export function getLaunchAssetPath() {
++  if (
++    (__DEV__ || isUsingDeveloperTool) &&
++    !shouldDeferToNativeForAPIMethodAvailabilityInDevelopment
++  ) {
++    return 'unavailable';
++  }
++  return ExpoUpdates.getLaunchAssetPath();
++}
++
+ //# sourceMappingURL=Updates.js.map
+\ No newline at end of file
+diff --git a/node_modules/expo-updates/ios/EXUpdates/UpdatesModule.swift b/node_modules/expo-updates/ios/EXUpdates/UpdatesModule.swift
+index f197d37..2e591b2 100644
+--- a/node_modules/expo-updates/ios/EXUpdates/UpdatesModule.swift
++++ b/node_modules/expo-updates/ios/EXUpdates/UpdatesModule.swift
+@@ -144,6 +144,10 @@ public final class UpdatesModule: Module, UpdatesEventManagerObserver {
+     Function("setUpdateURLAndRequestHeadersOverride") { (configOverride: UpdatesConfigOverrideParam?) in
+       try AppController.sharedInstance.setUpdateURLAndRequestHeadersOverride(configOverride?.toUpdatesConfigOverride())
+     }
++
++    Function("getLaunchAssetPath") {
++      return AppController.sharedInstance.launchAssetUrl()?.relativePath ?? "undefined"
++    }
+   }
+ 
+   public func onStateMachineContextEvent(context: UpdatesStateContext) {
+diff --git a/node_modules/expo-updates/src/ExpoUpdatesModule.types.ts b/node_modules/expo-updates/src/ExpoUpdatesModule.types.ts
+index b8cd06a..308c11e 100644
+--- a/node_modules/expo-updates/src/ExpoUpdatesModule.types.ts
++++ b/node_modules/expo-updates/src/ExpoUpdatesModule.types.ts
+@@ -129,4 +129,5 @@ export declare class ExpoUpdatesModule
+     | UpdateFetchResultFailure
+     | UpdateFetchResultRollBackToEmbedded
+   >;
++  getLaunchAssetPath: () => string;
+ }
+diff --git a/node_modules/expo-updates/src/Updates.ts b/node_modules/expo-updates/src/Updates.ts
+index 153f328..19f263b 100644
+--- a/node_modules/expo-updates/src/Updates.ts
++++ b/node_modules/expo-updates/src/Updates.ts
+@@ -318,3 +318,13 @@ export function setUpdateURLAndRequestHeadersOverride(
+ ): void {
+   ExpoUpdates.setUpdateURLAndRequestHeadersOverride(configOverride);
+ }
++
++export function getLaunchAssetPath(): string {
++  if (
++    (__DEV__ || isUsingDeveloperTool) &&
++    !shouldDeferToNativeForAPIMethodAvailabilityInDevelopment
++  ) {
++    return 'unavailable';
++  }
++  return ExpoUpdates.getLaunchAssetPath();
++}
