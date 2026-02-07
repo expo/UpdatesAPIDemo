@@ -1,0 +1,220 @@
+diff --git a/node_modules/expo-updates-interface/CHANGELOG.md b/node_modules/expo-updates-interface/CHANGELOG.md
+index 6c451c3..545e56b 100644
+--- a/node_modules/expo-updates-interface/CHANGELOG.md
++++ b/node_modules/expo-updates-interface/CHANGELOG.md
+@@ -6,6 +6,8 @@
+ 
+ ### 🎉 New features
+ 
++- Full native interface for updates. ([#41527](https://github.com/expo/expo/pull/41527) by [@douglowder](https://github.com/douglowder))
++
+ ### 🐛 Bug fixes
+ 
+ ### 💡 Others
+diff --git a/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesControllerRegistry.kt b/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesControllerRegistry.kt
+index 32f252d..82291b5 100644
+--- a/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesControllerRegistry.kt
++++ b/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesControllerRegistry.kt
+@@ -4,5 +4,4 @@ import java.lang.ref.WeakReference
+ 
+ object UpdatesControllerRegistry {
+   var controller: WeakReference<UpdatesInterface>? = null
+-  var metricsController: WeakReference<UpdatesMetricsInterface>? = null
+ }
+diff --git a/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesInterface.kt b/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesInterface.kt
+index 5a619bc..dcf11a6 100644
+--- a/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesInterface.kt
++++ b/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesInterface.kt
+@@ -3,12 +3,44 @@ package expo.modules.updatesinterface
+ import android.net.Uri
+ import org.json.JSONObject
+ import java.lang.ref.WeakReference
++import java.util.UUID
+ 
+ /**
+  * Interface for modules that depend on expo-updates for loading production updates but do not want
+  * to depend on expo-updates or delegate control to the singleton UpdatesController.
++ *
++ * All updates controllers implement this protocol
+  */
+ interface UpdatesInterface {
++  /**
++   * Whether updates is enabled
++   */
++  val isEnabled: Boolean get() = false
++
++  /**
++   * These properties are set when updates is enabled, or the dev client is running
++   */
++  val runtimeVersion: String?
++  val updateUrl: Uri?
++
++  /**
++   * These properties are only set when updates is enabled
++   */
++  val launchedUpdateId: UUID? get() = null
++  val embeddedUpdateId: UUID? get() = null
++  val launchAssetURL: Uri? get() = null
++
++  /**
++   * User code or third party modules can add a listener that will be called
++   * on updates state machine transitions (only when updates is enabled)
++   */
++  fun subscribeToUpdatesStateChanges(listener: UpdatesStateChangeListener): UpdatesStateChangeSubscription
++}
++
++/**
++ * Implemented only by the dev client updates controller.
++ */
++interface UpdatesDevLauncherInterface : UpdatesInterface {
+   interface UpdateCallback {
+     fun onFailure(e: Exception?)
+     fun onSuccess(update: Update?)
+@@ -32,7 +64,19 @@ interface UpdatesInterface {
+   fun reset()
+   fun fetchUpdateWithConfiguration(configuration: HashMap<String, Any>, callback: UpdateCallback)
+   fun isValidUpdatesConfiguration(configuration: HashMap<String, Any>): Boolean
++}
+ 
+-  val runtimeVersion: String?
+-  val updateUrl: Uri?
++interface UpdatesInterfaceCallbacks {
++  fun onRequestRelaunch()
++}
++
++interface UpdatesStateChangeListener {
++  fun updatesStateDidChange(event: Map<String, Any>)
++}
++
++interface UpdatesStateChangeSubscription {
++  /*
++   * Call this to remove the subscription and stop receiving state change events
++   */
++  fun remove()
+ }
+diff --git a/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesInterfaceCallbacks.kt b/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesInterfaceCallbacks.kt
+index 65942b3..e69de29 100644
+--- a/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesInterfaceCallbacks.kt
++++ b/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesInterfaceCallbacks.kt
+@@ -1,5 +0,0 @@
+-package expo.modules.updatesinterface
+-
+-interface UpdatesInterfaceCallbacks {
+-  fun onRequestRelaunch()
+-}
+diff --git a/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesMetricsInterface.kt b/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesMetricsInterface.kt
+index 18712bf..e69de29 100644
+--- a/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesMetricsInterface.kt
++++ b/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesMetricsInterface.kt
+@@ -1,16 +0,0 @@
+-package expo.modules.updatesinterface
+-
+-import android.net.Uri
+-import java.util.UUID
+-
+-/**
+- * Interface for modules that depend on expo-updates for reading metrics information
+- * about the currently running update, but do not want
+- * to depend on expo-updates or delegate control to the singleton UpdatesController.
+- */
+-interface UpdatesMetricsInterface {
+-  val runtimeVersion: String?
+-  val updateUrl: Uri?
+-  val launchedUpdateId: UUID?
+-  val embeddedUpdateId: UUID?
+-}
+diff --git a/node_modules/expo-updates-interface/ios/EXUpdatesInterface/UpdatesControllerRegistry.swift b/node_modules/expo-updates-interface/ios/EXUpdatesInterface/UpdatesControllerRegistry.swift
+index fd9eafd..4df3a13 100644
+--- a/node_modules/expo-updates-interface/ios/EXUpdatesInterface/UpdatesControllerRegistry.swift
++++ b/node_modules/expo-updates-interface/ios/EXUpdatesInterface/UpdatesControllerRegistry.swift
+@@ -2,11 +2,8 @@
+ 
+ import Foundation
+ 
+-@objc(EXUpdatesControllerRegistry)
+-@objcMembers
+ public final class UpdatesControllerRegistry: NSObject {
+-  public weak var controller: UpdatesExternalInterface?
+-  public weak var metricsController: UpdatesExternalMetricsInterface?
++  public weak var controller: UpdatesInterface?
+ 
+   public static let sharedInstance = UpdatesControllerRegistry()
+ }
+diff --git a/node_modules/expo-updates-interface/ios/EXUpdatesInterface/UpdatesExternalInterface.swift b/node_modules/expo-updates-interface/ios/EXUpdatesInterface/UpdatesExternalInterface.swift
+index c7a9c1c..7fa5108 100644
+--- a/node_modules/expo-updates-interface/ios/EXUpdatesInterface/UpdatesExternalInterface.swift
++++ b/node_modules/expo-updates-interface/ios/EXUpdatesInterface/UpdatesExternalInterface.swift
+@@ -15,13 +15,39 @@ public typealias UpdatesProgressBlock = (_ successfulAssetCount: UInt, _ failedA
+ public typealias UpdatesManifestBlock = (_ manifest: [String: Any]) -> Bool
+ 
+ /**
+- * Protocol for modules that depend on expo-updates for loading production updates but do not want
+- * to depend on expo-updates or delegate control to the singleton EXUpdatesAppController.
++ * All updates controllers implement this protocol, which provides information on the running
++ * updates system.
+  */
+-@objc(EXUpdatesExternalInterface)
+-public protocol UpdatesExternalInterface {
+-  @objc weak var updatesExternalInterfaceDelegate: (any UpdatesExternalInterfaceDelegate)? { get set }
++@objc(EXUpdatesInterface)
++public protocol UpdatesInterface {
++  /*
++   * Whether updates is enabled
++   */
++  @objc var isEnabled: Bool { get }
++  /*
++   * These properties are set when updates is enabled, or the dev client is running
++   */
++  @objc var runtimeVersion: String? { get }
++  @objc var updateURL: URL? { get }
++  /*
++   * These properties are only set when updates is enabled
++   */
++  @objc var launchedUpdateId: UUID? { get }
++  @objc var embeddedUpdateId: UUID? { get }
+   @objc var launchAssetURL: URL? { get }
++  /*
++   * User code or third party modules can add a listener that will be called
++   * on updates state machine transitions (only when updates is enabled)
++   */
++  @objc func subscribeToUpdatesStateChanges(_ listener: any UpdatesStateChangeListener) -> UpdatesStateChangeSubscription
++}
++
++/**
++ * Implemented only by the dev client updates controller.
++ */
++@objc(EXUpdatesDevLauncherInterface)
++public protocol UpdatesDevLauncherInterface: UpdatesInterface {
++  @objc weak var updatesExternalInterfaceDelegate: (any UpdatesExternalInterfaceDelegate)? { get set }
+ 
+   @objc var runtimeVersion: String? { get }
+   @objc var updateURL: URL? { get }
+@@ -44,16 +70,18 @@ public protocol UpdatesExternalInterface {
+  */
+ @objc(EXUpdatesExternalInterfaceDelegate)
+ public protocol UpdatesExternalInterfaceDelegate {
+-  @objc func updatesExternalInterfaceDidRequestRelaunch(_ updatesExternalInterface: UpdatesExternalInterface)
++  @objc func updatesExternalInterfaceDidRequestRelaunch(_ updatesExternalInterface: UpdatesDevLauncherInterface)
+ }
+ 
+-/**
+- * Protocol for use by the expo-app-metrics library
+- */
+-@objc(EXUpdatesExternalMetricsInterface)
+-public protocol UpdatesExternalMetricsInterface {
+-  @objc var runtimeVersion: String? { get }
+-  @objc var updateURL: URL? { get }
+-  @objc var launchedUpdateId: UUID? { get }
+-  @objc var embeddedUpdateId: UUID? { get }
++@objc(EXUpdatesStateChangeListener)
++public protocol UpdatesStateChangeListener {
++  func updatesStateDidChange(_ event: [String: Any])
++}
++
++@objc(EXUpdatesStateChangeSubscription)
++public protocol UpdatesStateChangeSubscription {
++  /*
++   * Call this to remove the subscription and stop receiving state change events
++   */
++  func remove()
+ }

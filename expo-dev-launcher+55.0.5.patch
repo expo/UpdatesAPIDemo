@@ -1,0 +1,186 @@
+diff --git a/node_modules/expo-dev-launcher/CHANGELOG.md b/node_modules/expo-dev-launcher/CHANGELOG.md
+index 08b24b9..3dc411e 100644
+--- a/node_modules/expo-dev-launcher/CHANGELOG.md
++++ b/node_modules/expo-dev-launcher/CHANGELOG.md
+@@ -45,6 +45,7 @@ _This version does not introduce any user-facing changes._
+ - [iOS] Add activity indicator when loading dev server URL. ([#40825](https://github.com/expo/expo/pull/40825) by [@alanjhughes](https://github.com/alanjhughes))
+ - Add initial macOS support ([#41330](https://github.com/expo/expo/pull/41330) by [@gabrieldonadel](https://github.com/gabrieldonadel))
+ - Add api to change bundleUrl from JS ([#42065](https://github.com/expo/expo/pull/42065) by [@alanjhughes](https://github.com/alanjhughes))
++- Full native interface for updates. ([#41527](https://github.com/expo/expo/pull/41527) by [@douglowder](https://github.com/douglowder))
+ 
+ ### 🐛 Bug fixes
+ 
+diff --git a/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/DevLauncherController.kt b/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/DevLauncherController.kt
+index bfc11df..4391215 100644
+--- a/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/DevLauncherController.kt
++++ b/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/DevLauncherController.kt
+@@ -42,6 +42,7 @@ import expo.modules.devlauncher.services.DependencyInjection
+ import expo.modules.kotlin.weak
+ import expo.modules.manifests.core.Manifest
+ import expo.modules.updatesinterface.UpdatesInterface
++import expo.modules.updatesinterface.UpdatesDevLauncherInterface
+ import kotlinx.coroutines.CoroutineScope
+ import kotlinx.coroutines.Dispatchers
+ import kotlinx.coroutines.launch
+@@ -146,7 +147,7 @@ class DevLauncherController private constructor(
+       val manifestParser = DevLauncherManifestParser(httpClient, parsedUrl, installationIDHelper.getOrCreateInstallationID(context))
+       val appIntent = createAppIntent()
+ 
+-      updatesInterface?.reset()
++      (updatesInterface as UpdatesDevLauncherInterface?)?.reset()
+ 
+       val appLoaderFactory = DevLauncherAppLoaderFactory(
+         context,
+diff --git a/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/helpers/DevLauncherUpdatesHelper.kt b/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/helpers/DevLauncherUpdatesHelper.kt
+index 9950118..911023c 100644
+--- a/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/helpers/DevLauncherUpdatesHelper.kt
++++ b/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/helpers/DevLauncherUpdatesHelper.kt
+@@ -2,7 +2,7 @@ package expo.modules.devlauncher.helpers
+ 
+ import android.content.Context
+ import android.net.Uri
+-import expo.modules.updatesinterface.UpdatesInterface
++import expo.modules.updatesinterface.UpdatesDevLauncherInterface
+ import org.json.JSONObject
+ import java.lang.Exception
+ import java.util.*
+@@ -11,16 +11,16 @@ import kotlin.coroutines.resume
+ import kotlin.coroutines.resumeWithException
+ import kotlin.coroutines.suspendCoroutine
+ 
+-suspend fun UpdatesInterface.loadUpdate(
++suspend fun UpdatesDevLauncherInterface.loadUpdate(
+   configuration: HashMap<String, Any>,
+   context: Context,
+   shouldContinue: (manifest: JSONObject) -> Boolean
+-): UpdatesInterface.Update =
++): UpdatesDevLauncherInterface.Update =
+   suspendCoroutine { cont ->
+     this.fetchUpdateWithConfiguration(
+       configuration,
+-      object : UpdatesInterface.UpdateCallback {
+-        override fun onSuccess(update: UpdatesInterface.Update?) {
++      object : UpdatesDevLauncherInterface.UpdateCallback {
++        override fun onSuccess(update: UpdatesDevLauncherInterface.Update?) {
+           // if the update is null, we previously aborted the fetch, so we've already resumed
+           update?.let { cont.resume(update) }
+         }
+@@ -32,7 +32,7 @@ suspend fun UpdatesInterface.loadUpdate(
+           return if (shouldContinue(manifest)) {
+             true
+           } else {
+-            cont.resume(object : UpdatesInterface.Update {
++            cont.resume(object : UpdatesDevLauncherInterface.Update {
+               override val manifest: JSONObject = manifest
+               override val launchAssetPath: String
+                 get() = throw Exception("Tried to access launch asset path for a manifest that was not loaded")
+diff --git a/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/launcher/loaders/DevLauncherAppLoaderFactory.kt b/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/launcher/loaders/DevLauncherAppLoaderFactory.kt
+index 1ea726f..64554b0 100644
+--- a/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/launcher/loaders/DevLauncherAppLoaderFactory.kt
++++ b/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/launcher/loaders/DevLauncherAppLoaderFactory.kt
+@@ -9,6 +9,7 @@ import expo.modules.devlauncher.helpers.createUpdatesConfigurationWithUrl
+ import expo.modules.devlauncher.helpers.loadUpdate
+ import expo.modules.devlauncher.launcher.manifest.DevLauncherManifestParser
+ import expo.modules.manifests.core.Manifest
++import expo.modules.updatesinterface.UpdatesDevLauncherInterface
+ import expo.modules.updatesinterface.UpdatesInterface
+ 
+ class DevLauncherAppLoaderFactory(
+@@ -36,7 +37,7 @@ class DevLauncherAppLoaderFactory(
+         null
+       } else {
+         val configurationCandidate = createUpdatesConfigurationWithUrl(url, projectUrl, runtimeVersion, installationIDHelper.getOrCreateInstallationID(context))
+-        if (it.isValidUpdatesConfiguration(configurationCandidate)) {
++        if ((it as UpdatesDevLauncherInterface).isValidUpdatesConfiguration(configurationCandidate)) {
+           configurationCandidate
+         } else {
+           null
+@@ -51,7 +52,7 @@ class DevLauncherAppLoaderFactory(
+       }
+       DevLauncherLocalAppLoader(manifest!!, appHost, context, controller)
+     } else {
+-      val update = updatesInterface!!.loadUpdate(validConfiguration, context) {
++      val update = (updatesInterface as UpdatesDevLauncherInterface?)!!.loadUpdate(validConfiguration, context) {
+         manifest = Manifest.fromManifestJson(it) // TODO: might be able to pass actual manifest object in here
+         return@loadUpdate !manifest!!.isUsingDeveloperTool()
+       }
+diff --git a/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/react/DevLauncherReactNativeHostHandler.kt b/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/react/DevLauncherReactNativeHostHandler.kt
+index 980e359..ed278bd 100644
+--- a/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/react/DevLauncherReactNativeHostHandler.kt
++++ b/node_modules/expo-dev-launcher/android/src/debug/java/expo/modules/devlauncher/react/DevLauncherReactNativeHostHandler.kt
+@@ -9,6 +9,7 @@ import expo.modules.core.interfaces.ReactNativeHostHandler
+ import expo.modules.devlauncher.DevLauncherController
+ import java.lang.ref.WeakReference
+ import expo.modules.updatesinterface.UpdatesControllerRegistry
++import expo.modules.updatesinterface.UpdatesDevLauncherInterface
+ import kotlinx.coroutines.CoroutineScope
+ import kotlinx.coroutines.Dispatchers
+ import kotlinx.coroutines.launch
+@@ -45,7 +46,7 @@ class DevLauncherReactNativeHostHandler(context: Context) : ReactNativeHostHandl
+     CoroutineScope(Dispatchers.Main).launch {
+       UpdatesControllerRegistry.controller?.get()?.let {
+         DevLauncherController.instance.updatesInterface = it
+-        it.updatesInterfaceCallbacks = WeakReference(DevLauncherController.instance)
++        (it as UpdatesDevLauncherInterface).updatesInterfaceCallbacks = WeakReference(DevLauncherController.instance)
+       }
+     }
+   }
+diff --git a/node_modules/expo-dev-launcher/ios/EXDevLauncherController.h b/node_modules/expo-dev-launcher/ios/EXDevLauncherController.h
+index d881bb9..9894c3f 100644
+--- a/node_modules/expo-dev-launcher/ios/EXDevLauncherController.h
++++ b/node_modules/expo-dev-launcher/ios/EXDevLauncherController.h
+@@ -45,7 +45,7 @@ NS_ASSUME_NONNULL_BEGIN
+ @property (nonatomic, weak) EXAppContext * _Nullable appContext;
+ @property (nonatomic, strong) EXDevLauncherPendingDeepLinkRegistry *pendingDeepLinkRegistry;
+ @property (nonatomic, strong) EXDevLauncherRecentlyOpenedAppsRegistry *recentlyOpenedAppsRegistry;
+-@property (nonatomic, strong) id<EXUpdatesExternalInterface> updatesInterface;
++@property (nonatomic, strong) id<EXUpdatesDevLauncherInterface> updatesInterface;
+ 
+ + (instancetype)sharedInstance;
+ 
+diff --git a/node_modules/expo-dev-launcher/ios/EXDevLauncherController.m b/node_modules/expo-dev-launcher/ios/EXDevLauncherController.m
+index 6b333a9..47d22eb 100644
+--- a/node_modules/expo-dev-launcher/ios/EXDevLauncherController.m
++++ b/node_modules/expo-dev-launcher/ios/EXDevLauncherController.m
+@@ -270,8 +270,8 @@
+ 
+ - (nullable NSURL *)sourceUrl
+ {
+-  if (_shouldPreferUpdatesInterfaceSourceUrl && _updatesInterface && ((id<EXUpdatesExternalInterface>)_updatesInterface).launchAssetURL) {
+-    return ((id<EXUpdatesExternalInterface>)_updatesInterface).launchAssetURL;
++  if (_shouldPreferUpdatesInterfaceSourceUrl && _updatesInterface && ((id<EXUpdatesDevLauncherInterface>)_updatesInterface).launchAssetURL) {
++    return ((id<EXUpdatesDevLauncherInterface>)_updatesInterface).launchAssetURL;
+   }
+   return _sourceUrl;
+ }
+@@ -406,7 +406,7 @@
+       // do nothing for now
+     } success:^(NSDictionary * _Nullable manifest) {
+       if (manifest) {
+-        launchExpoApp(((id<EXUpdatesExternalInterface>)self->_updatesInterface).launchAssetURL, [EXManifestsManifestFactory manifestForManifestJSON:manifest]);
++        launchExpoApp(((id<EXUpdatesDevLauncherInterface>)self->_updatesInterface).launchAssetURL, [EXManifestsManifestFactory manifestForManifestJSON:manifest]);
+       }
+     } error:onError];
+   };
+@@ -669,7 +669,7 @@
+   return updatesConfig;
+ }
+ 
+-- (void)updatesExternalInterfaceDidRequestRelaunch:(id<EXUpdatesExternalInterface> _Nonnull)updatesExternalInterface {
++- (void)updatesExternalInterfaceDidRequestRelaunch:(id<EXUpdatesDevLauncherInterface> _Nonnull)updatesExternalInterface {
+   NSURL * _Nullable appUrl = self.appManifestURLWithFallback;
+   if (!appUrl) {
+     return;
+diff --git a/node_modules/expo-dev-launcher/ios/ReactDelegateHandler/ExpoDevLauncherReactDelegateHandler.swift b/node_modules/expo-dev-launcher/ios/ReactDelegateHandler/ExpoDevLauncherReactDelegateHandler.swift
+index e02ea0c..b19ae6a 100644
+--- a/node_modules/expo-dev-launcher/ios/ReactDelegateHandler/ExpoDevLauncherReactDelegateHandler.swift
++++ b/node_modules/expo-dev-launcher/ios/ReactDelegateHandler/ExpoDevLauncherReactDelegateHandler.swift
+@@ -60,7 +60,7 @@ public class ExpoDevLauncherReactDelegateHandler: ExpoReactDelegateHandler, EXDe
+     self.reactDelegate = reactDelegate
+     self.launchOptions = launchOptions
+ 
+-    if let sharedController = UpdatesControllerRegistry.sharedInstance.controller {
++    if let sharedController = UpdatesControllerRegistry.sharedInstance.controller as? UpdatesDevLauncherInterface {
+       // for some reason the swift compiler and bridge are having issues here
+       EXDevLauncherController.sharedInstance().updatesInterface = sharedController
+       sharedController.updatesExternalInterfaceDelegate = EXDevLauncherController.sharedInstance()
