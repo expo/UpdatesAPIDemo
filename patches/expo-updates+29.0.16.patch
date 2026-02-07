@@ -1,0 +1,107 @@
+--- a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesModule.kt
++++ b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/UpdatesModule.kt
+@@ -63,6 +63,10 @@ class UpdatesModule : Module(), IUpdatesEventManagerObserver {
+       UpdatesController.removeUpdatesEventManagerObserver()
+     }
+ 
++    Function("getLaunchAssetPath") { ->
++      UpdatesController.instance.launchAssetFile ?: "undefined"
++    }
++
+     AsyncFunction("reload") Coroutine { options: ReloadScreenOptions? ->
+       UpdatesController.instance.reloadScreenManager?.setConfiguration(options)
+       UpdatesController.instance.relaunchReactApplicationForModule()
+diff --git a/node_modules/expo-updates/build/ExpoUpdatesModule.types.d.ts b/node_modules/expo-updates/build/ExpoUpdatesModule.types.d.ts
+index 1f20499..8c6fb22 100644
+--- a/node_modules/expo-updates/build/ExpoUpdatesModule.types.d.ts
++++ b/node_modules/expo-updates/build/ExpoUpdatesModule.types.d.ts
+@@ -43,6 +43,7 @@ export interface UpdatesModuleInterface {
+         lastCheckForUpdateTimeString?: string;
+         rollbackString?: string;
+     };
++    getLaunchAssetPath: () => string | undefined;
+     reload: () => Promise<void>;
+     checkForUpdateAsync: () => Promise<UpdateCheckResultRollBack | (Omit<UpdateCheckResultAvailable, 'manifest'> & ({
+         manifestString: string;
+diff --git a/node_modules/expo-updates/build/Updates.d.ts b/node_modules/expo-updates/build/Updates.d.ts
+index 1c5cda7..b75db83 100644
+--- a/node_modules/expo-updates/build/Updates.d.ts
++++ b/node_modules/expo-updates/build/Updates.d.ts
+@@ -109,6 +109,7 @@ export declare const createdAt: Date | null;
+ export declare function reloadAsync(options?: {
+     reloadScreenOptions?: ReloadScreenOptions;
+ }): Promise<void>;
++export declare function getLaunchAssetPath(): string;
+ /**
+  * Checks the server to see if a newly deployed update to your project is available. Does not
+  * actually download the update. This method cannot be used in development mode, and the returned
+diff --git a/node_modules/expo-updates/build/Updates.js b/node_modules/expo-updates/build/Updates.js
+index 91e66ce..2f4fd1a 100644
+--- a/node_modules/expo-updates/build/Updates.js
++++ b/node_modules/expo-updates/build/Updates.js
+@@ -176,6 +176,16 @@ export async function reloadAsync(options) {
+     }
+     await ExpoUpdates.reload(null);
+ }
++export function getLaunchAssetPath() {
++  if (
++    (__DEV__ || isUsingDeveloperTool) &&
++    !shouldDeferToNativeForAPIMethodAvailabilityInDevelopment
++  ) {
++    return 'unavailable';
++  }
++  return ExpoUpdates.getLaunchAssetPath();
++}
++
+ /**
+  * Checks the server to see if a newly deployed update to your project is available. Does not
+  * actually download the update. This method cannot be used in development mode, and the returned
+diff --git a/node_modules/expo-updates/ios/EXUpdates/UpdatesModule.swift b/node_modules/expo-updates/ios/EXUpdates/UpdatesModule.swift
+index 55efaca..f948121 100644
+--- a/node_modules/expo-updates/ios/EXUpdates/UpdatesModule.swift
++++ b/node_modules/expo-updates/ios/EXUpdates/UpdatesModule.swift
+@@ -35,6 +35,10 @@ public final class UpdatesModule: Module, UpdatesEventManagerObserver {
+       AppController.removeUpdatesEventManagerObserver()
+     }
+ 
++    Function("getLaunchAssetPath") {
++      return AppController.sharedInstance.launchAssetUrl()?.relativePath ?? "undefined"
++    }
++
+     AsyncFunction("reload") { (options: ReloadScreenOptions?, promise: Promise) in
+       AppController.sharedInstance.reloadScreenManager?.setConfiguration(options)
+       AppController.sharedInstance.requestRelaunch {
+diff --git a/node_modules/expo-updates/src/ExpoUpdatesModule.types.ts b/node_modules/expo-updates/src/ExpoUpdatesModule.types.ts
+index 0cbdca9..2a1627b 100644
+--- a/node_modules/expo-updates/src/ExpoUpdatesModule.types.ts
++++ b/node_modules/expo-updates/src/ExpoUpdatesModule.types.ts
+@@ -64,6 +64,8 @@ export interface UpdatesModuleInterface {
+     rollbackString?: string;
+   };
+ 
++  getLaunchAssetPath: () => (string | undefined);
++
+   reload: () => Promise<void>;
+   checkForUpdateAsync: () => Promise<
+     | UpdateCheckResultRollBack
+diff --git a/node_modules/expo-updates/src/Updates.ts b/node_modules/expo-updates/src/Updates.ts
+index d5f2937..7b7dcf8 100644
+--- a/node_modules/expo-updates/src/Updates.ts
++++ b/node_modules/expo-updates/src/Updates.ts
+@@ -227,6 +227,16 @@ export async function reloadAsync(options?: {
+   await ExpoUpdates.reload(null);
+ }
+ 
++export function getLaunchAssetPath(): string {
++  if (
++    (__DEV__ || isUsingDeveloperTool) &&
++    !shouldDeferToNativeForAPIMethodAvailabilityInDevelopment
++  ) {
++    return 'unavailable';
++  }
++  return ExpoUpdates.getLaunchAssetPath();
++}
++
+ /**
+  * Checks the server to see if a newly deployed update to your project is available. Does not
+  * actually download the update. This method cannot be used in development mode, and the returned
