@@ -2,7 +2,7 @@ import Constants from "expo-constants"
 import { type CurrentlyRunningInfo, type UseUpdatesReturnType } from "expo-updates"
 import { ExpoConfig, ExpoUpdatesManifest } from "expo/config"
 import {
-  getLaunchAssetUrl,
+  getLaunchAssetPath,
   getLaunchedUpdateId,
   getRuntimeVersion,
 } from "../../../modules/interface-demo"
@@ -44,6 +44,7 @@ const currentlyRunningTitle = (currentlyRunning: CurrentlyRunningInfo) => {
 const currentlyRunningDescription = (
   currentlyRunning: CurrentlyRunningInfo,
   lastCheckForUpdateTime?: Date,
+  lastStateChangeEvent?: string,
 ) => {
   return (
     ` ID: ${getLaunchedUpdateId()}\n` +
@@ -52,7 +53,8 @@ const currentlyRunningDescription = (
     ` Runtime Version: ${getRuntimeVersion()}\n` +
     ` Message: ${manifestMessage(currentlyRunning.manifest)}\n` +
     ` Last check: ${lastCheckForUpdateTime?.toISOString()}\n` +
-    ` Launch URL from module: ${getLaunchAssetUrl()}\n`
+    ` Launch asset path: ${getLaunchAssetPath()}\n` +
+    ` Last state change event: ${lastStateChangeEvent}\n`
   )
 }
 

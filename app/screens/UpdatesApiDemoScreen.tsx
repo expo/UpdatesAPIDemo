@@ -2,7 +2,6 @@ import { useUpdates, setUpdateRequestHeadersOverride, reloadAsync } from "expo-u
 import { lightTheme } from "@expo/styleguide-base"
 import React, { useEffect, useState } from "react"
 import { ActivityIndicator, Alert, TextStyle, View, ViewStyle } from "react-native"
-
 import { ExpoAssets, ExpoDemoCard, Screen, Text, UpdateMonitor } from "../components"
 import { spacing } from "../theme"
 import { DocsLogo } from "../svg"
@@ -12,6 +11,7 @@ import {
   usePersistentDate,
 } from "../utils/updates"
 import { CheckInterval, checkIntervalFromSettings, useSettings } from "../utils/useSettings"
+import { useLastUpdatesStateChange } from "../../modules/interface-demo"
 
 enum CustomUpdateChannels {
   main = "main",
@@ -23,6 +23,8 @@ const expoVariant = "default"
 export function UpdatesApiDemoScreen() {
   const { currentlyRunning, isChecking, isDownloading, lastCheckForUpdateTimeSinceRestart } =
     useUpdates()
+
+  const demoModuleLastStateChangeEvent = useLastUpdatesStateChange()
 
   const [showSettings, setShowSettings] = useState(false)
 
@@ -145,7 +147,11 @@ export function UpdatesApiDemoScreen() {
       <ExpoDemoCard
         variant={expoVariant}
         title={currentlyRunningTitle(currentlyRunning)}
-        description={currentlyRunningDescription(currentlyRunning, lastCheckForUpdateTime)}
+        description={currentlyRunningDescription(
+          currentlyRunning,
+          lastCheckForUpdateTime,
+          demoModuleLastStateChangeEvent?.type ?? "",
+        )}
         actions={[
           {
             label: showSettings ? "Hide monitor options" : "Show monitor options",
