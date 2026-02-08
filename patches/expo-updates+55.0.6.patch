@@ -1,15 +1,3 @@
-diff --git a/node_modules/expo-updates/CHANGELOG.md b/node_modules/expo-updates/CHANGELOG.md
-index 7eaa842..edfc96a 100644
---- a/node_modules/expo-updates/CHANGELOG.md
-+++ b/node_modules/expo-updates/CHANGELOG.md
-@@ -42,6 +42,7 @@ _This version does not introduce any user-facing changes._
- 
- - Remove `ExpoAppDelegate` inheritance requirement ([#39417](https://github.com/expo/expo/pull/39417) by [@gabrieldonadel](https://github.com/gabrieldonadel))
- - Add patch content negotiation headers. ([#40583](https://github.com/expo/expo/pull/40583) by [@alanjhughes](https://github.com/alanjhughes))
-+- Full native interface for updates. ([#41527](https://github.com/expo/expo/pull/41527) by [@douglowder](https://github.com/douglowder))
- 
- ### 🐛 Bug fixes
- 
 diff --git a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/DisabledUpdatesController.kt b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/DisabledUpdatesController.kt
 index bcd30c6..c2ffa85 100644
 --- a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/DisabledUpdatesController.kt
@@ -57,7 +45,7 @@ index bcd30c6..c2ffa85 100644
      private val TAG = DisabledUpdatesController::class.java.simpleName
    }
 diff --git a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/EnabledUpdatesController.kt b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/EnabledUpdatesController.kt
-index 0ad4138..f6b58e7 100644
+index 0ad4138..fc692e7 100644
 --- a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/EnabledUpdatesController.kt
 +++ b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/EnabledUpdatesController.kt
 @@ -31,7 +31,9 @@ import expo.modules.updates.selectionpolicy.SelectionPolicy
@@ -98,14 +86,12 @@ index 0ad4138..f6b58e7 100644
  
    override val runtimeVersion: String?
      get() = updatesConfiguration.runtimeVersionRaw
-@@ -334,6 +338,25 @@ class EnabledUpdatesController(
+@@ -334,6 +338,23 @@ class EnabledUpdatesController(
    override val embeddedUpdateId: UUID?
      get() = getEmbeddedUpdate()?.id
  
-+  override val launchAssetURL: Uri?
-+    get() = startupProcedure.launchAssetFile?.let {
-+      Uri.fromFile(File(it))
-+    }
++  override val launchAssetPath: String?
++    get() = startupProcedure.launchAssetFile
 +
 +  override fun subscribeToUpdatesStateChanges(listener: UpdatesStateChangeListener): UpdatesStateChangeSubscription {
 +    val subscriptionId = UUID.randomUUID().toString()
@@ -393,7 +379,7 @@ index 773ba49..268ac1c 100644
        let newPath = newPath.cString(using: .utf8),
        let patchPath = patchPath.cString(using: .utf8) else {
 diff --git a/node_modules/expo-updates/ios/EXUpdates/DevLauncherAppController.swift b/node_modules/expo-updates/ios/EXUpdates/DevLauncherAppController.swift
-index f41a8dd..5b750ec 100644
+index f41a8dd..fc81e8e 100644
 --- a/node_modules/expo-updates/ios/EXUpdates/DevLauncherAppController.swift
 +++ b/node_modules/expo-updates/ios/EXUpdates/DevLauncherAppController.swift
 @@ -45,14 +45,24 @@ enum DevLauncherAppControllerError: Int, Error, LocalizedError {
@@ -424,7 +410,18 @@ index f41a8dd..5b750ec 100644
  
    public func launchAssetUrl() -> URL? {
      return launcher?.launchAssetUrl
-@@ -107,7 +117,7 @@ public final class DevLauncherAppController: NSObject, InternalAppControllerInte
+@@ -62,6 +72,10 @@ public final class DevLauncherAppController: NSObject, InternalAppControllerInte
+     launcher?.launchAssetUrl
+   }
+ 
++  public var launchAssetPath: String? {
++    launcher?.launchAssetUrl?.relativePath
++  }
++
+   public var runtimeVersion: String? {
+     config?.runtimeVersion
+   }
+@@ -107,7 +121,7 @@ public final class DevLauncherAppController: NSObject, InternalAppControllerInte
        loaderSelectionPolicy: LoaderSelectionPolicyDevelopmentClient(config: self.config),
        reaperSelectionPolicy: ReaperSelectionPolicyDevelopmentClient()
      )
@@ -434,7 +431,7 @@ index f41a8dd..5b750ec 100644
    }
  
 diff --git a/node_modules/expo-updates/ios/EXUpdates/DisabledAppController.swift b/node_modules/expo-updates/ios/EXUpdates/DisabledAppController.swift
-index 50422d3..d2d834c 100644
+index 50422d3..1211c70 100644
 --- a/node_modules/expo-updates/ios/EXUpdates/DisabledAppController.swift
 +++ b/node_modules/expo-updates/ios/EXUpdates/DisabledAppController.swift
 @@ -1,6 +1,11 @@
@@ -463,7 +460,7 @@ index 50422d3..d2d834c 100644
 +
 +  public var embeddedUpdateId: UUID?
 +
-+  public var launchAssetURL: URL?
++  public var launchAssetPath: String?
 +
    public var reloadScreenManager: Reloadable?
  
@@ -484,7 +481,7 @@ index 50422d3..d2d834c 100644
      success successBlockArg: @escaping () -> Void,
      error errorBlockArg: @escaping (ExpoModulesCore.Exception) -> Void
 diff --git a/node_modules/expo-updates/ios/EXUpdates/EnabledAppController.swift b/node_modules/expo-updates/ios/EXUpdates/EnabledAppController.swift
-index dcffc47..344882d 100644
+index dcffc47..cf62bea 100644
 --- a/node_modules/expo-updates/ios/EXUpdates/EnabledAppController.swift
 +++ b/node_modules/expo-updates/ios/EXUpdates/EnabledAppController.swift
 @@ -4,10 +4,24 @@ import SwiftUI
@@ -550,8 +547,8 @@ index dcffc47..344882d 100644
      return getEmbeddedUpdate()?.updateId
    }
  
-+  public var launchAssetURL: URL? {
-+    return startupProcedure.launchAssetUrl()
++  public var launchAssetPath: String? {
++    return startupProcedure.launchAssetUrl()?.relativePath
 +  }
 +
 +  public var isEnabled: Bool = true
@@ -575,7 +572,7 @@ index 5a17341..ef572ed 100644
  }
 +// swiftlint:enable legacy_objc_type
 diff --git a/node_modules/expo-updates/ios/EXUpdates/UpdatesStateMachine.swift b/node_modules/expo-updates/ios/EXUpdates/UpdatesStateMachine.swift
-index 348b659..399dbf2 100644
+index 348b659..060d7d2 100644
 --- a/node_modules/expo-updates/ios/EXUpdates/UpdatesStateMachine.swift
 +++ b/node_modules/expo-updates/ios/EXUpdates/UpdatesStateMachine.swift
 @@ -3,6 +3,7 @@
@@ -598,13 +595,13 @@ index 348b659..399dbf2 100644
 +    case .downloadCompleteWithUpdate(manifest: let manifest):
 +      return ["type": "downloadCompleteWithUpdate", "manifest": manifest]
 +    case .checkError(errorMessage: let errorMessage):
-+      return ["type": type, "errorMessage": errorMessage]
++      return ["type": "checkError", "errorMessage": errorMessage]
 +    case .downloadError(errorMessage: let errorMessage):
-+      return ["type": type, "errorMessage": errorMessage]
++      return ["type": "downloadError", "errorMessage": errorMessage]
 +    case .downloadProgress(progress: let progress):
-+      return ["type": type, "progress": progress]
++      return ["type": "downloadProgress", "progress": progress]
 +    default:
-+      return ["type": type]
++      return ["type": "\(type)"]
 +    }
 +  }
  }

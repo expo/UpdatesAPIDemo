@@ -1,16 +1,3 @@
-diff --git a/node_modules/expo-updates-interface/CHANGELOG.md b/node_modules/expo-updates-interface/CHANGELOG.md
-index 6c451c3..545e56b 100644
---- a/node_modules/expo-updates-interface/CHANGELOG.md
-+++ b/node_modules/expo-updates-interface/CHANGELOG.md
-@@ -6,6 +6,8 @@
- 
- ### 🎉 New features
- 
-+- Full native interface for updates. ([#41527](https://github.com/expo/expo/pull/41527) by [@douglowder](https://github.com/douglowder))
-+
- ### 🐛 Bug fixes
- 
- ### 💡 Others
 diff --git a/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesControllerRegistry.kt b/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesControllerRegistry.kt
 index 32f252d..82291b5 100644
 --- a/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesControllerRegistry.kt
@@ -22,7 +9,7 @@ index 32f252d..82291b5 100644
 -  var metricsController: WeakReference<UpdatesMetricsInterface>? = null
  }
 diff --git a/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesInterface.kt b/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesInterface.kt
-index 5a619bc..dcf11a6 100644
+index 5a619bc..30c8eb3 100644
 --- a/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesInterface.kt
 +++ b/node_modules/expo-updates-interface/android/src/main/java/expo/modules/updatesinterface/UpdatesInterface.kt
 @@ -3,12 +3,44 @@ package expo.modules.updatesinterface
@@ -54,7 +41,7 @@ index 5a619bc..dcf11a6 100644
 +   */
 +  val launchedUpdateId: UUID? get() = null
 +  val embeddedUpdateId: UUID? get() = null
-+  val launchAssetURL: Uri? get() = null
++  val launchAssetPath: String? get() = null
 +
 +  /**
 +   * User code or third party modules can add a listener that will be called
@@ -141,10 +128,10 @@ index fd9eafd..4df3a13 100644
    public static let sharedInstance = UpdatesControllerRegistry()
  }
 diff --git a/node_modules/expo-updates-interface/ios/EXUpdatesInterface/UpdatesExternalInterface.swift b/node_modules/expo-updates-interface/ios/EXUpdatesInterface/UpdatesExternalInterface.swift
-index c7a9c1c..7fa5108 100644
+index c7a9c1c..fcf15da 100644
 --- a/node_modules/expo-updates-interface/ios/EXUpdatesInterface/UpdatesExternalInterface.swift
 +++ b/node_modules/expo-updates-interface/ios/EXUpdatesInterface/UpdatesExternalInterface.swift
-@@ -15,13 +15,39 @@ public typealias UpdatesProgressBlock = (_ successfulAssetCount: UInt, _ failedA
+@@ -15,16 +15,43 @@ public typealias UpdatesProgressBlock = (_ successfulAssetCount: UInt, _ failedA
  public typealias UpdatesManifestBlock = (_ manifest: [String: Any]) -> Bool
  
  /**
@@ -155,7 +142,6 @@ index c7a9c1c..7fa5108 100644
   */
 -@objc(EXUpdatesExternalInterface)
 -public protocol UpdatesExternalInterface {
--  @objc weak var updatesExternalInterfaceDelegate: (any UpdatesExternalInterfaceDelegate)? { get set }
 +@objc(EXUpdatesInterface)
 +public protocol UpdatesInterface {
 +  /*
@@ -172,7 +158,7 @@ index c7a9c1c..7fa5108 100644
 +   */
 +  @objc var launchedUpdateId: UUID? { get }
 +  @objc var embeddedUpdateId: UUID? { get }
-   @objc var launchAssetURL: URL? { get }
++  @objc var launchAssetPath: String? { get }
 +  /*
 +   * User code or third party modules can add a listener that will be called
 +   * on updates state machine transitions (only when updates is enabled)
@@ -185,11 +171,16 @@ index c7a9c1c..7fa5108 100644
 + */
 +@objc(EXUpdatesDevLauncherInterface)
 +public protocol UpdatesDevLauncherInterface: UpdatesInterface {
-+  @objc weak var updatesExternalInterfaceDelegate: (any UpdatesExternalInterfaceDelegate)? { get set }
+   @objc weak var updatesExternalInterfaceDelegate: (any UpdatesExternalInterfaceDelegate)? { get set }
+-  @objc var launchAssetURL: URL? { get }
  
    @objc var runtimeVersion: String? { get }
    @objc var updateURL: URL? { get }
-@@ -44,16 +70,18 @@ public protocol UpdatesExternalInterface {
++  @objc var launchAssetURL: URL? { get }
+ 
+   @objc func reset()
+ 
+@@ -44,16 +71,18 @@ public protocol UpdatesExternalInterface {
   */
  @objc(EXUpdatesExternalInterfaceDelegate)
  public protocol UpdatesExternalInterfaceDelegate {
