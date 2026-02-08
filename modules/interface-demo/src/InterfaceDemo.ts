@@ -11,7 +11,7 @@ try {
     handleStateChangeEvent,
   )
 } catch {
-  console.log("Demo module not found")
+  throw new Error("Demo module not found")
 }
 
 export type DemoState = {
@@ -31,7 +31,7 @@ function handleStateChangeEvent(params: any) {
   _stateChangeListeners.forEach((listener) => listener(newParams))
 }
 
-export function useDemoState() {
+export function useLastUpdatesStateChange() {
   if (!interfaceDemoModule) {
     return {
       runtimeVersion: "unavailable",
@@ -81,6 +81,6 @@ export function getLaunchedUpdateId() {
   return interfaceDemoModule?.getLaunchedUpdateId() ?? "unavailable"
 }
 
-export function getLaunchAssetUrl() {
-  return interfaceDemoModule?.getLaunchAssetUrl() ?? "unavailable"
+export function getLaunchAssetPath() {
+  return interfaceDemoModule?.getLaunchAssetPath() ?? "unavailable"
 }

@@ -4,7 +4,6 @@ import EXUpdatesInterface
 let demoEventName = "InterfaceDemo.updatesInterfaceStateChangeEvent"
 
 public class InterfaceDemoModule: Module, UpdatesStateChangeListener {
-  private let methodQueue = DispatchQueue(label: "expo.modules.EXUpdatesQueue")
   private var updatesController: (any UpdatesInterface)?
   private var hasListener: Bool = false
   private var subscription: UpdatesStateChangeSubscription?
@@ -57,9 +56,8 @@ public class InterfaceDemoModule: Module, UpdatesStateChangeListener {
       return updatesController?.runtimeVersion
     }
 
-    Function("getLaunchAssetUrl") {
-      return updatesController?.launchAssetURL
+    Function("getLaunchAssetPath") {
+      return updatesController?.launchAssetPath
     }
-
   }
 }

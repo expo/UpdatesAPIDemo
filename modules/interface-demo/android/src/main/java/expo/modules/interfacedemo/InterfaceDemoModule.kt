@@ -5,7 +5,6 @@ import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import expo.modules.kotlin.types.Enumerable
 import expo.modules.updatesinterface.*
-import java.net.URL
 
 class InterfaceDemoModule : Module(), UpdatesStateChangeListener {
   private var hasListener: Boolean = false
@@ -13,9 +12,9 @@ class InterfaceDemoModule : Module(), UpdatesStateChangeListener {
   private var subscription: UpdatesStateChangeSubscription? = null
 
   override fun definition() = ModuleDefinition {
-    Name("ExpoUpdatesE2ETest")
+    Name("InterfaceDemo")
 
-    Events<UpdatesE2EEvent>()
+    Events<InterfaceDemoEvent>()
 
     OnCreate {
       UpdatesControllerRegistry.controller?.get()?.let {
@@ -24,11 +23,11 @@ class InterfaceDemoModule : Module(), UpdatesStateChangeListener {
       }
     }
 
-    OnStartObserving(UpdatesE2EEvent.StateChange) {
+    OnStartObserving(InterfaceDemoEvent.StateChange) {
       hasListener = true
     }
 
-    OnStopObserving(UpdatesE2EEvent.StateChange) {
+    OnStopObserving(InterfaceDemoEvent.StateChange) {
       hasListener = false
     }
 
@@ -50,8 +49,8 @@ class InterfaceDemoModule : Module(), UpdatesStateChangeListener {
       return@Function updatesController?.runtimeVersion
     }
 
-    Function("getLaunchAssetUrl") {
-      return@Function updatesController?.launchAssetURL
+    Function("getLaunchAssetPath") {
+      return@Function updatesController?.launchAssetPath
     }
   }
 
@@ -65,11 +64,11 @@ class InterfaceDemoModule : Module(), UpdatesStateChangeListener {
         manifestBundle.putString("id", manifest["id"] as String)
         payload.putBundle("manifest", manifestBundle)
       }
-      sendEvent(UpdatesE2EEvent.StateChange, payload)
+      sendEvent(InterfaceDemoEvent.StateChange, payload)
     }
   }
 }
 
-enum class UpdatesE2EEvent(val eventName: String) : Enumerable {
-  StateChange("Expo.updatesE2EStateChangeEvent")
+enum class InterfaceDemoEvent(val eventName: String) : Enumerable {
+  StateChange("InterfaceDemo.updatesInterfaceStateChangeEvent")
 }
