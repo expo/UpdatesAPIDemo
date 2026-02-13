@@ -1,6 +1,7 @@
 import Constants from "expo-constants"
 import type { CurrentlyRunningInfo, UseUpdatesReturnType } from "expo-updates"
 import { ExpoConfig, ExpoUpdatesManifest } from "expo/config"
+import { NativeInterfaceStateEvent } from "../../../modules/interface-demo"
 
 const expoConfig: ExpoConfig = require("../../../app.json").expo as unknown as ExpoConfig
 
@@ -86,6 +87,18 @@ const errorDescription = (updatesSystem: UseUpdatesReturnType) => {
   return checkErrorDescription + downloadErrorDescription
 }
 
+const nativeInterfaceDescription = (lastNativeInterfaceStateChange: NativeInterfaceStateEvent) => {
+  const { runtimeVersion, launchedUpdateId, embeddedUpdateId, type, manifest } =
+    lastNativeInterfaceStateChange
+  return (
+    ` Launched update ID: ${launchedUpdateId}\n` +
+    ` Embedded update ID: ${embeddedUpdateId}\n` +
+    ` Runtime Version: ${runtimeVersion}\n` +
+    ` Last event: ${type ?? ""}\n` +
+    ` Last event manifest: ${manifest?.id ?? ""}\n`
+  )
+}
+
 export {
   availableUpdateTitle,
   availableUpdateDescription,
@@ -94,4 +107,5 @@ export {
   currentlyRunningDescription,
   isAvailableUpdateCritical,
   manifestMessage,
+  nativeInterfaceDescription,
 }

@@ -9,9 +9,11 @@ import { DocsLogo } from "../svg"
 import {
   currentlyRunningTitle,
   currentlyRunningDescription,
+  nativeInterfaceDescription,
   usePersistentDate,
 } from "../utils/updates"
 import { CheckInterval, checkIntervalFromSettings, useSettings } from "../utils/useSettings"
+import { useLastNativeInterfaceStateChange } from "../../modules/interface-demo"
 
 enum CustomUpdateChannels {
   main = "main",
@@ -29,6 +31,8 @@ export function UpdatesApiDemoScreen() {
   const [preferredUpdateChannel, setPreferredUpdateChannel] = useState<CustomUpdateChannels>(
     CustomUpdateChannels.main,
   )
+
+  const lastNativeInterfaceStateChange = useLastNativeInterfaceStateChange()
 
   const { settings, changeSettings } = useSettings()
 
@@ -167,6 +171,11 @@ export function UpdatesApiDemoScreen() {
         ]}
         booleanSettings={monitorBooleanSettings}
         choiceSettings={monitorChoiceSettings}
+      />
+      <ExpoDemoCard
+        variant={expoVariant}
+        title="Native interface info"
+        description={nativeInterfaceDescription(lastNativeInterfaceStateChange)}
       />
       <ExpoAssets />
       <View style={$spacer} />
