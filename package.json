@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@expo-google-fonts/space-grotesk": "^0.2.2",
-    "@expo/metro-runtime": "~55.0.4",
+    "@expo/metro-runtime": "~55.0.5",
     "@expo/styleguide-base": "^1.0.1",
     "@expo/styleguide-native": "^7.0.1",
     "@radix-ui/colors": "^3.0.0",
@@ -42,17 +42,22 @@
     "@react-navigation/native-stack": "^6.0.2",
     "apisauce": "3.0.1",
     "date-fns": "^2.30.0",
-    "expo": "^55.0.0-preview.9",
-    "expo-application": "~55.0.4",
-    "expo-build-properties": "~55.0.5",
-    "expo-device": "~55.0.5",
-    "expo-file-system": "~55.0.4",
-    "expo-font": "~55.0.2",
-    "expo-linking": "~55.0.3",
-    "expo-localization": "~55.0.4",
-    "expo-splash-screen": "~55.0.4",
+    "expo": "^55.0.0-preview.10",
+    "expo-application": "~55.0.5",
+    "expo-build-properties": "~55.0.6",
+    "expo-dev-client": "./dependencies/expo-dev-client-55.0.5-1771019504673.tgz",
+    "expo-dev-launcher": "./dependencies/expo-dev-launcher-55.0.6-1771019504060.tgz",
+    "expo-dev-menu": "./dependencies/expo-dev-menu-55.0.5-1771019501878.tgz",
+    "expo-dev-menu-interface": "./dependencies/expo-dev-menu-interface-55.0.1-1771019501609.tgz",
+    "expo-device": "~55.0.6",
+    "expo-file-system": "~55.0.5",
+    "expo-font": "~55.0.3",
+    "expo-linking": "~55.0.4",
+    "expo-localization": "~55.0.5",
+    "expo-splash-screen": "~55.0.5",
     "expo-status-bar": "~55.0.2",
-    "expo-updates": "~55.0.6",
+    "expo-updates": "./dependencies/expo-updates-55.0.7-1771019494198.tgz",
+    "expo-updates-interface": "./dependencies/expo-updates-interface-55.1.1-1771019494198.tgz",
     "i18n-js": "3.9.2",
     "react": "19.2.0",
     "react-dom": "19.2.0",
@@ -102,12 +107,17 @@
     "react-test-renderer": "18.2.0",
     "regenerator-runtime": "^0.13.4",
     "ts-jest": "^29.1.1",
-    "typescript": "^5.1.6"
+    "typescript": "~5.9.2"
   },
   "expo": {
     "install": {
       "exclude": [
-        "typescript"
+        "expo-updates",
+        "expo-updates-interface",
+        "expo-dev-client",
+        "expo-dev-launcher",
+        "expo-dev-menu",
+        "expo-dev-menu-interface"
       ]
     }
   },
