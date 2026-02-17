@@ -7,10 +7,24 @@ public class InterfaceDemoModule: Module, UpdatesStateChangeListener {
   private var updatesController: (any UpdatesInterface)?
   private var hasListener: Bool = false
   private var subscription: UpdatesStateChangeSubscription?
+  private var lastDownloadTime: Float?
+  private var startDate: Date?
 
   public func updatesStateDidChange(_ event: [String : Any]) {
+    if event["type"] as? String == "download" {
+      startDate = Date(timeIntervalSinceNow: 0)
+    }
+    if startDate != nil && event["type"] as? String == "downloadCompleteWithUpdate" {
+      let stopDate = Date(timeIntervalSinceNow: 0)
+      lastDownloadTime = Float(stopDate.timeIntervalSince(startDate ?? Date()))
+      startDate = nil
+    }
     if (hasListener) {
-      sendEvent(demoEventName, event)
+      var mutatedEvent: [String: Any] = event
+      if let lastDownloadTime = lastDownloadTime {
+        mutatedEvent["lastDownloadTime"] = lastDownloadTime
+      }
+      sendEvent(demoEventName, mutatedEvent)
     }
   }
 

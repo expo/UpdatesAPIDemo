@@ -5,11 +5,14 @@ import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import expo.modules.kotlin.types.Enumerable
 import expo.modules.updatesinterface.*
+import java.util.Date
 
 class InterfaceDemoModule : Module(), UpdatesStateChangeListener {
   private var hasListener: Boolean = false
   private var updatesController: UpdatesInterface? = null
   private var subscription: UpdatesStateChangeSubscription? = null
+  private var startTime: Long? = null
+  private var lastDownloadTime: Float? = null
 
   override fun definition() = ModuleDefinition {
     Name("InterfaceDemo")
@@ -55,9 +58,21 @@ class InterfaceDemoModule : Module(), UpdatesStateChangeListener {
   }
 
   override fun updatesStateDidChange(event: Map<String, Any>) {
+    when (event.get("type")) {
+      "download" -> {
+        startTime = Date().time
+      }
+      "downloadCompleteWithUpdate" -> {
+        startTime?.let { lastDownloadTime = ((Date().time - it) / 1000.0)?.toFloat() }
+        startTime = null
+      }
+    }
     if (hasListener) {
       val payload = Bundle()
       payload.putString("type", event["type"] as String)
+      lastDownloadTime?.let {
+        payload.putFloat("lastDownloadTime", it)
+      }
       val manifest = event["manifest"] as? Map<*, *>
       if (manifest != null) {
         val manifestBundle = Bundle()

@@ -19,6 +19,7 @@ export type NativeInterfaceStateEvent = {
   embeddedUpdateId: string
   launchedUpdateId: string
   launchAssetPath: string
+  lastDownloadTime: number | null
   type?: string | null
   manifest?: ExpoUpdatesManifest | null
 }
@@ -39,21 +40,21 @@ export function useLastNativeInterfaceStateChange() {
       embeddedUpdateId: "unavailable",
       launchedUpdateId: "unavailable",
       launchAssetPath: "unavailable",
+      lastDownloadTime: null,
       type: "unavailable",
       manifest: null,
     }
   }
-  const runtimeVersion = interfaceDemoModule.getRuntimeVersion()
-  const embeddedUpdateId = interfaceDemoModule.getEmbeddedUpdateId()
-  const launchedUpdateId = interfaceDemoModule.getLaunchedUpdateId()
-  const launchAssetPath = interfaceDemoModule.getLaunchAssetPath()
+  const runtimeVersion = getRuntimeVersion()
+  const embeddedUpdateId = getEmbeddedUpdateId()
   const [state, setState] = useState<NativeInterfaceStateEvent>({
     type: null,
     manifest: null,
     runtimeVersion,
     embeddedUpdateId,
-    launchedUpdateId,
-    launchAssetPath,
+    launchedUpdateId: getLaunchedUpdateId(),
+    launchAssetPath: getLaunchAssetPath(),
+    lastDownloadTime: null,
   })
   const listener = useCallback((event: any) => {
     setState({
@@ -61,8 +62,9 @@ export function useLastNativeInterfaceStateChange() {
       manifest: event.manifest,
       runtimeVersion,
       embeddedUpdateId,
-      launchedUpdateId,
-      launchAssetPath,
+      launchedUpdateId: getLaunchedUpdateId(),
+      launchAssetPath: getLaunchAssetPath(),
+      lastDownloadTime: event?.lastDownloadTime ?? null,
     })
   }, [])
   useEffect(() => {

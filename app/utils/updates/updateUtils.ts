@@ -88,14 +88,15 @@ const errorDescription = (updatesSystem: UseUpdatesReturnType) => {
 }
 
 const nativeInterfaceDescription = (lastNativeInterfaceStateChange: NativeInterfaceStateEvent) => {
-  const { runtimeVersion, launchedUpdateId, embeddedUpdateId, type, manifest } =
+  const { runtimeVersion, launchedUpdateId, embeddedUpdateId, type, manifest, lastDownloadTime } =
     lastNativeInterfaceStateChange
   return (
     ` Launched update ID: ${launchedUpdateId}\n` +
     ` Embedded update ID: ${embeddedUpdateId}\n` +
     ` Runtime Version: ${runtimeVersion}\n` +
     ` Last event: ${type ?? ""}\n` +
-    ` Last event manifest: ${manifest?.id ?? ""}\n`
+    ` Last event manifest: ${manifest?.id ?? ""}\n` +
+    ` Last download time: ${lastDownloadTime !== null ? `${lastDownloadTime} seconds` : "null"}`
   )
 }
 
