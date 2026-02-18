@@ -11,6 +11,7 @@ App to test out
 - Can use the [update configuration override feature](./UPDATECONFIGURATION.md), introduced in SDK 52.
 - Demonstrates [download progress, screen options for reload, and request headers override](https://expo.dev/changelog/sdk-54#expo-updates--eas-update), introduced in SDK 54.
 - Enables [bundle diffing](https://docs.expo.dev/eas-update/bundle-diffing/#enable-bundle-diffing) for smaller update download sizes, introduced in SDK 55.
+- [Demo native module](./modules/interface-demo/README.md) using the new [updates native interface](https://github.com/expo/expo/tree/main/packages/expo-updates-interface/README.md), introduced in SDK 55.
 
 Built using the [Ignite React Native boilerplate CLI](https://github.com/infinitered/ignite)
 
