@@ -4653,6 +4653,13 @@ expo-modules-autolinking@55.0.8:
     chalk "^4.1.0"
     commander "^7.2.0"
 
+expo-modules-core@55.0.10:
+  version "55.0.10"
+  resolved "https://registry.yarnpkg.com/expo-modules-core/-/expo-modules-core-55.0.10.tgz#afe3c6bfb5cc7f3b9f6ae68c6dc6f88ef9d3557b"
+  integrity sha512-NNK6FyMH3Zk64xok5wWCiW9O3ZtO7yUyUKe6U9vmIjfytDd4Cn6jdkG+RLi0y6dcEdT17kheYNwd9DpQeH2FLg==
+  dependencies:
+    invariant "^2.2.4"
+
 expo-modules-core@55.0.11:
   version "55.0.11"
   resolved "https://registry.yarnpkg.com/expo-modules-core/-/expo-modules-core-55.0.11.tgz#e1b9d75748c75aae3b61614200da9040dc91d336"
