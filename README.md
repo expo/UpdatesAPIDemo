@@ -23,7 +23,7 @@ Built using the [Ignite React Native boilerplate CLI](https://github.com/infinit
 # You can execute `bun install` instead of `yarn` if you prefer
 yarn
 eas init
-eas update:configure
+eas update:configure --environment preview
 ```
 
 If you have not done so already, create a new updates channel in EAS named "main".
