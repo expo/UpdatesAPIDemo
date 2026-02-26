@@ -96,7 +96,7 @@ const nativeInterfaceDescription = (lastNativeInterfaceStateChange: NativeInterf
     ` Runtime Version: ${runtimeVersion}\n` +
     ` Last event: ${type ?? ""}\n` +
     ` Last event manifest: ${manifest?.id ?? ""}\n` +
-    ` Last download time: ${lastDownloadTime !== null ? `${lastDownloadTime} seconds` : "null"}`
+    ` Last download time: ${lastDownloadTime !== null ? `${Math.floor(lastDownloadTime * 1000)} ms` : "null"}`
   )
 }
 
