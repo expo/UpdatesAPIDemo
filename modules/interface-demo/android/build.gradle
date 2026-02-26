@@ -1,0 +1,22 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'expo.modules.interfacedemo'
+version = '0.7.6'
+
+android {
+  namespace "expo.modules.interfacedemo"
+  defaultConfig {
+    versionCode 1
+    versionName "0.7.6"
+  }
+  lintOptions {
+    abortOnError false
+  }
+}
+
+dependencies {
+  implementation project(':expo-updates-interface')
+}

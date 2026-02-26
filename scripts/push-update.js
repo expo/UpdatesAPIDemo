@@ -60,7 +60,7 @@ const pushUpdateAsync = async (message, critical, breakTheApp, channel, projectR
   }
   console.log("Publishing update...")
 
-  await spawnAsync("eas", ["update", `--message=${message}`, `--channel=${channel}`], {
+  await spawnAsync("eas", ["update", `--message=${message}`, `--channel=${channel}`, '--environment=preview'], {
     stdio: "inherit",
     path: projectRoot,
   })

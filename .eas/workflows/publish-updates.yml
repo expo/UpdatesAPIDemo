@@ -6,7 +6,8 @@
 #
 # Key features:
 # - Triggers on pushes to all branches
-#    (Requires linked GitHub account: https://expo.dev/accounts/[account]/settings/github)
+#   - (Requires linked GitHub account: https://expo.dev/accounts/[account]/settings/github)
+#   - After configuring builds and updates with EAS, uncomment the three lines below starting with "push:"
 # - Can be triggered manually with eas workflow:run publish-preview-update.yml
 # - Runs the pre-packaged update job
 #
@@ -18,9 +19,10 @@
 
 name: Publish preview update
 on:
-  push:
-    branches:
-      - "*"
+  workflow_dispatch: {}
+  # push:
+  #   branches:
+  #     - "*"
 jobs:
   publish_preview_update:
     name: Publish preview update

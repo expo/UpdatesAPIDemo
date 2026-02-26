@@ -13,13 +13,16 @@
       "backgroundColor": "#191015"
     },
     "updates": {
-      "assetPatternsToBeBundled": ["app/includedImages/*"],
+      "assetPatternsToBeBundled": [
+        "app/includedImages/*",
+        "app/includedImages/*"
+      ],
+      "enableBsdiffPatchSupport": true,
       "requestHeaders": {
         "expo-channel-name": "main"
       }
     },
     "jsEngine": "hermes",
-    "newArchEnabled": true,
     "android": {
       "icon": "./assets/images/app-icon-android-legacy.png",
       "package": "com.updatesapidemo",
@@ -34,6 +37,9 @@
       }
     },
     "ios": {
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      },
       "icon": "./assets/images/app-icon-ios.png",
       "supportsTablet": true,
       "bundleIdentifier": "com.updatesapidemo",
@@ -48,7 +54,11 @@
       "criticalIndex": 0,
       "message": ""
     },
-    "plugins": ["expo-localization", "expo-build-properties", "expo-font"],
+    "plugins": [
+      "expo-localization",
+      "expo-build-properties",
+      "expo-font"
+    ],
     "experiments": {
       "tsconfigPaths": true
     }
