@@ -17,6 +17,9 @@ const usage = () => {
   console.log(
     "    <--channel|-ch> (optional) Sets the channel passed into the EAS update command (defaults to main)",
   )
+  console.log(
+    "    <--platform|-p> (optional) If present, only pushes the update for a single platform <ios|android>",
+  )
 }
 
 const incrementCriticalIndexIfNeeded = async (critical, projectRoot) => {
@@ -31,7 +34,10 @@ const incrementCriticalIndexIfNeeded = async (critical, projectRoot) => {
   return updatedCriticalIndex
 }
 
-const pushUpdateAsync = async (message, critical, breakTheApp, channel, projectRoot) => {
+const pushUpdateAsync = async (message, critical, breakTheApp, channel, platform, projectRoot) => {
+  if (platform !== null && platform !== "ios" && platform !== "android") {
+    throw new Error('Platform must be "ios" or "android"')
+  }
   console.log("Modifying app.json...")
   const appJsonPath = path.resolve(projectRoot, "app.json")
   const appJsonOriginalText = await fs.readFile(appJsonPath, { encoding: "utf-8" })
@@ -60,7 +66,11 @@ const pushUpdateAsync = async (message, critical, breakTheApp, channel, projectR
   }
   console.log("Publishing update...")
 
-  await spawnAsync("eas", ["update", `--message=${message}`, `--channel=${channel}`, '--environment=preview'], {
+  const args = ["update", `--message=${message}`, `--channel=${channel}`, "--environment=preview"]
+  if (platform !== null) {
+    args.push(`--platform=${platform}`)
+  }
+  await spawnAsync("eas", args, {
     stdio: "inherit",
     path: projectRoot,
   })
@@ -79,6 +89,7 @@ let message = ""
 let critical = false
 let breakTheApp = false
 let channel = "main"
+let platform = null
 
 while (params.length) {
   if (params[0] === "--message" || params[0] === "-m") {
@@ -95,6 +106,10 @@ while (params.length) {
     channel = params[1]
     params.shift()
   }
+  if (params[0] === "--platform" || params[0] === "-p") {
+    platform = params[1]
+    params.shift()
+  }
   params.shift()
 }
 
@@ -107,7 +122,8 @@ console.log(`message = ${message}`)
 console.log(`critical = ${critical}`)
 console.log(`breakTheApp = ${breakTheApp}`)
 console.log(`channel = ${channel}`)
+console.log(`platform = ${platform}`)
 
-pushUpdateAsync(message, critical, breakTheApp, channel, projectRoot).catch((error) =>
+pushUpdateAsync(message, critical, breakTheApp, channel, platform, projectRoot).catch((error) =>
   console.log(`Error in script: ${error}`),
 )
