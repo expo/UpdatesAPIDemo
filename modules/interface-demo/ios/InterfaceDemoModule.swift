@@ -3,28 +3,25 @@ import EXUpdatesInterface
 
 let demoEventName = "InterfaceDemo.updatesInterfaceStateChangeEvent"
 
+let MAX_CACHED_EVENTS = 100
+
 public class InterfaceDemoModule: Module, UpdatesStateChangeListener {
   private var updatesController: (any UpdatesInterface)?
   private var hasListener: Bool = false
   private var subscription: UpdatesStateChangeSubscription?
-  private var lastDownloadTime: Float?
-  private var startDate: Date?
+  private var lastDownloadTime: Double?
+  private var cachedEvents: [[String: Any]] = []
 
   public func updatesStateDidChange(_ event: [String : Any]) {
-    if event["type"] as? String == "download" {
-      startDate = Date(timeIntervalSinceNow: 0)
+    if event["type"] as? String != "downloadProgress" {
+      cachedEvents.append(event)
     }
-    if startDate != nil && event["type"] as? String == "downloadCompleteWithUpdate" {
-      let stopDate = Date(timeIntervalSinceNow: 0)
-      lastDownloadTime = Float(stopDate.timeIntervalSince(startDate ?? Date()))
-      startDate = nil
+    if cachedEvents.count > MAX_CACHED_EVENTS {
+      cachedEvents.removeFirst()
     }
+    updateLastDownloadTimeIfNeeded()
     if (hasListener) {
-      var mutatedEvent: [String: Any] = event
-      if let lastDownloadTime = lastDownloadTime {
-        mutatedEvent["lastDownloadTime"] = lastDownloadTime
-      }
-      sendEvent(demoEventName, mutatedEvent)
+      sendEvent(demoEventName, event)
     }
   }
 
@@ -37,25 +34,22 @@ public class InterfaceDemoModule: Module, UpdatesStateChangeListener {
 
     Events([demoEventName])
 
-    OnCreate {
+    OnStartObserving(demoEventName) {
       if let controller = UpdatesControllerRegistry.sharedInstance.controller {
         updatesController = controller
+        cachedEvents = []
         subscription = controller.subscribeToUpdatesStateChanges(self)
+        updateLastDownloadTimeIfNeeded()
+        self.hasListener = true
       }
     }
 
-    OnStartObserving(demoEventName) {
-      hasListener = true
-    }
-
     OnStopObserving(demoEventName) {
-      hasListener = false
-    }
-
-    OnDestroy {
       subscription?.remove()
+      hasListener = false
       updatesController = nil
       subscription = nil
+      cachedEvents = []
     }
 
     Function("getLaunchedUpdateId") {
@@ -72,6 +66,19 @@ public class InterfaceDemoModule: Module, UpdatesStateChangeListener {
 
     Function("getLaunchAssetPath") {
       return updatesController?.launchAssetPath
+    }
+
+    Function("getLastDownloadTime") {
+      return lastDownloadTime
+    }
+  }
+
+  private func updateLastDownloadTimeIfNeeded() {
+    if let subscription = subscription,
+      let context = subscription.getContext() as? UpdatesNativeInterfaceStateContext,
+      let startTime = context.downloadStartTime,
+      let finishTime = context.downloadFinishTime {
+      lastDownloadTime = finishTime.timeIntervalSince(startTime)
     }
   }
 }
