@@ -3,25 +3,16 @@ import EXUpdatesInterface
 
 let demoEventName = "InterfaceDemo.updatesInterfaceStateChangeEvent"
 
-let MAX_CACHED_EVENTS = 100
-
 public class InterfaceDemoModule: Module, UpdatesStateChangeListener {
   private var updatesController: (any UpdatesInterface)?
   private var hasListener: Bool = false
   private var subscription: UpdatesStateChangeSubscription?
   private var lastDownloadTime: Double?
-  private var cachedEvents: [[String: Any]] = []
 
   public func updatesStateDidChange(_ event: [String : Any]) {
-    if event["type"] as? String != "downloadProgress" {
-      cachedEvents.append(event)
-    }
-    if cachedEvents.count > MAX_CACHED_EVENTS {
-      cachedEvents.removeFirst()
-    }
     updateLastDownloadTimeIfNeeded()
     if (hasListener) {
-      sendEvent(demoEventName, event)
+      sendEvent(demoEventName, InterfaceDemoEvent(type: event["type"] as? String ?? "").toMap)
     }
   }
 
@@ -37,7 +28,6 @@ public class InterfaceDemoModule: Module, UpdatesStateChangeListener {
     OnStartObserving(demoEventName) {
       if let controller = UpdatesControllerRegistry.sharedInstance.controller {
         updatesController = controller
-        cachedEvents = []
         subscription = controller.subscribeToUpdatesStateChanges(self)
         updateLastDownloadTimeIfNeeded()
         self.hasListener = true
@@ -49,7 +39,6 @@ public class InterfaceDemoModule: Module, UpdatesStateChangeListener {
       hasListener = false
       updatesController = nil
       subscription = nil
-      cachedEvents = []
     }
 
     Function("getLaunchedUpdateId") {
@@ -80,5 +69,19 @@ public class InterfaceDemoModule: Module, UpdatesStateChangeListener {
       let finishTime = context.downloadFinishTime {
       lastDownloadTime = finishTime.timeIntervalSince(startTime)
     }
+  }
+}
+
+struct InterfaceDemoEvent {
+  let type: String
+  let timestamp: Int
+
+  init(type: String) {
+    self.type = type
+    self.timestamp = Int(Date.now.timeIntervalSince1970 * 1000)
+  }
+
+  var toMap: [String: Any] {
+    return ["type": type, "timestamp": timestamp]
   }
 }

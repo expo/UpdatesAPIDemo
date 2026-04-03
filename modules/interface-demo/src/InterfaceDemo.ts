@@ -1,5 +1,4 @@
 import { requireNativeModule } from "expo"
-import { ExpoUpdatesManifest } from "expo/config"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 let interfaceDemoModule: any | undefined
@@ -23,8 +22,7 @@ export type NativeInterfaceState = {
 }
 
 export type NativeInterfaceStateEvent = {
-  type?: string | null
-  manifest?: ExpoUpdatesManifest | null
+  type: string | null
   timestamp: number
 }
 
@@ -66,7 +64,6 @@ export function useNativeInterfaceStateChanges(): NativeInterfaceState {
     }
     recentEvents.current.push({
       type: event.type,
-      manifest: event.manifest,
       timestamp: event.timestamp,
     })
     recentEvents.current.sort((a, b) => {

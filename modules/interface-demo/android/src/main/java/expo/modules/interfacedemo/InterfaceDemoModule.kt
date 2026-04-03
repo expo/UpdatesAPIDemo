@@ -11,7 +11,6 @@ class InterfaceDemoModule : Module(), UpdatesStateChangeListener {
   private var updatesController: UpdatesInterface? = null
   private var subscription: UpdatesStateChangeSubscription? = null
   private var lastDownloadTime: Double? = null
-  private val cachedEvents: MutableList<Map<String, Any>> = mutableListOf()
 
   override fun definition() = ModuleDefinition {
     Name("InterfaceDemo")
@@ -56,13 +55,10 @@ class InterfaceDemoModule : Module(), UpdatesStateChangeListener {
   }
 
   override fun updatesStateDidChange(event: Map<String, Any>) {
-    cachedEvents.add(event)
-    if (cachedEvents.size > MAX_CACHED_EVENTS) {
-      cachedEvents.removeAt(0)
-    }
     updateLastDownloadTimeIfNeeded()
     if (hasListener) {
-      sendEvent(InterfaceDemoEvent.StateChange, eventToBundle(event))
+      val demoEvent = InterfaceDemoEventData(type = event["type"] as? String ?: "")
+      sendEvent(InterfaceDemoEvent.StateChange, demoEvent.toBundle())
     }
   }
 
@@ -72,32 +68,16 @@ class InterfaceDemoModule : Module(), UpdatesStateChangeListener {
     val finishTime = context.downloadFinishTime ?: return
     lastDownloadTime = (finishTime.time - startTime.time).toDouble() / 1000.0
   }
+}
 
-  private fun eventToBundle(event: Map<String, Any>): Bundle {
-    val payload = Bundle()
-    payload.putString("type", event["type"] as? String ?: "")
+data class InterfaceDemoEventData(val type: String) {
+  val timestamp: Long = System.currentTimeMillis()
 
-    val manifest = event["manifest"] as? Map<*, *>
-    if (manifest != null) {
-      val manifestBundle = Bundle()
-      manifestBundle.putString("id", manifest["id"] as? String ?: "")
-      payload.putBundle("manifest", manifestBundle)
+  fun toBundle(): Bundle {
+    return Bundle().apply {
+      putString("type", type)
+      putLong("timestamp", timestamp)
     }
-
-    val errorMessage = event["errorMessage"] as? String
-    errorMessage?.let {
-      payload.putString("errorMessage", it)
-    }
-
-    val progress = event["progress"] as? Double
-    progress?.let {
-      payload.putDouble("progress", it)
-    }
-    return payload
-  }
-
-  companion object {
-    private const val MAX_CACHED_EVENTS = 100
   }
 }
 
