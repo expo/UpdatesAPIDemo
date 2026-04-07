@@ -130,7 +130,7 @@ export const UpdateMonitor: (props: UpdateMonitorProps) => JSX.Element = ({
 
   // Actions: only show actions that make sense based on the current state
   const actions: { label: string; onPress: () => void }[] = []
-  if (isUpdateAvailable || buttonsAlwaysVisible) {
+  if ((isUpdateAvailable && !isUpdatePending) || buttonsAlwaysVisible) {
     actions.push({
       label: "Download",
       onPress: () => {

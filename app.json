@@ -14,7 +14,6 @@
     },
     "updates": {
       "assetPatternsToBeBundled": [
-        "app/includedImages/*",
         "app/includedImages/*"
       ],
       "enableBsdiffPatchSupport": true,

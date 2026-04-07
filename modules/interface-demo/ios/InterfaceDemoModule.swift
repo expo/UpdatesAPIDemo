@@ -7,24 +7,12 @@ public class InterfaceDemoModule: Module, UpdatesStateChangeListener {
   private var updatesController: (any UpdatesInterface)?
   private var hasListener: Bool = false
   private var subscription: UpdatesStateChangeSubscription?
-  private var lastDownloadTime: Float?
-  private var startDate: Date?
+  private var lastDownloadTime: Double?
 
   public func updatesStateDidChange(_ event: [String : Any]) {
-    if event["type"] as? String == "download" {
-      startDate = Date(timeIntervalSinceNow: 0)
-    }
-    if startDate != nil && event["type"] as? String == "downloadCompleteWithUpdate" {
-      let stopDate = Date(timeIntervalSinceNow: 0)
-      lastDownloadTime = Float(stopDate.timeIntervalSince(startDate ?? Date()))
-      startDate = nil
-    }
+    updateLastDownloadTimeIfNeeded()
     if (hasListener) {
-      var mutatedEvent: [String: Any] = event
-      if let lastDownloadTime = lastDownloadTime {
-        mutatedEvent["lastDownloadTime"] = lastDownloadTime
-      }
-      sendEvent(demoEventName, mutatedEvent)
+      sendEvent(demoEventName, InterfaceDemoEvent(type: event["type"] as? String ?? "").toMap)
     }
   }
 
@@ -37,23 +25,18 @@ public class InterfaceDemoModule: Module, UpdatesStateChangeListener {
 
     Events([demoEventName])
 
-    OnCreate {
+    OnStartObserving(demoEventName) {
       if let controller = UpdatesControllerRegistry.sharedInstance.controller {
         updatesController = controller
         subscription = controller.subscribeToUpdatesStateChanges(self)
+        updateLastDownloadTimeIfNeeded()
+        self.hasListener = true
       }
     }
 
-    OnStartObserving(demoEventName) {
-      hasListener = true
-    }
-
     OnStopObserving(demoEventName) {
-      hasListener = false
-    }
-
-    OnDestroy {
       subscription?.remove()
+      hasListener = false
       updatesController = nil
       subscription = nil
     }
@@ -73,5 +56,32 @@ public class InterfaceDemoModule: Module, UpdatesStateChangeListener {
     Function("getLaunchAssetPath") {
       return updatesController?.launchAssetPath
     }
+
+    Function("getLastDownloadTime") {
+      return lastDownloadTime
+    }
+  }
+
+  private func updateLastDownloadTimeIfNeeded() {
+    if let subscription = subscription,
+      let context = subscription.getContext() as? UpdatesNativeInterfaceStateContext,
+      let startTime = context.downloadStartTime,
+      let finishTime = context.downloadFinishTime {
+      lastDownloadTime = finishTime.timeIntervalSince(startTime)
+    }
+  }
+}
+
+struct InterfaceDemoEvent {
+  let type: String
+  let timestamp: Int
+
+  init(type: String) {
+    self.type = type
+    self.timestamp = Int(Date.now.timeIntervalSince1970 * 1000)
+  }
+
+  var toMap: [String: Any] {
+    return ["type": type, "timestamp": timestamp]
   }
 }

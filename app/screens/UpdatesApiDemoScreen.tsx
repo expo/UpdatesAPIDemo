@@ -13,7 +13,7 @@ import {
   usePersistentDate,
 } from "../utils/updates"
 import { CheckInterval, checkIntervalFromSettings, useSettings } from "../utils/useSettings"
-import { useLastNativeInterfaceStateChange } from "../../modules/interface-demo"
+import { useNativeInterfaceStateChanges } from "../../modules/interface-demo"
 
 enum CustomUpdateChannels {
   main = "main",
@@ -32,7 +32,7 @@ export function UpdatesApiDemoScreen() {
     CustomUpdateChannels.main,
   )
 
-  const lastNativeInterfaceStateChange = useLastNativeInterfaceStateChange()
+  const lastNativeInterfaceStateChange = useNativeInterfaceStateChanges()
 
   const { settings, changeSettings } = useSettings()
 

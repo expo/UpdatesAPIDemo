@@ -5,39 +5,32 @@ import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import expo.modules.kotlin.types.Enumerable
 import expo.modules.updatesinterface.*
-import java.util.Date
 
 class InterfaceDemoModule : Module(), UpdatesStateChangeListener {
   private var hasListener: Boolean = false
   private var updatesController: UpdatesInterface? = null
   private var subscription: UpdatesStateChangeSubscription? = null
-  private var startTime: Long? = null
-  private var lastDownloadTime: Float? = null
+  private var lastDownloadTime: Double? = null
 
   override fun definition() = ModuleDefinition {
     Name("InterfaceDemo")
 
     Events<InterfaceDemoEvent>()
 
-    OnCreate {
+    OnStartObserving(InterfaceDemoEvent.StateChange) {
       UpdatesControllerRegistry.controller?.get()?.let {
-        subscription = it.subscribeToUpdatesStateChanges(this@InterfaceDemoModule)
         updatesController = it
+        subscription = it.subscribeToUpdatesStateChanges(this@InterfaceDemoModule)
+        updateLastDownloadTimeIfNeeded()
+        hasListener = true
       }
     }
 
-    OnStartObserving(InterfaceDemoEvent.StateChange) {
-      hasListener = true
-    }
-
     OnStopObserving(InterfaceDemoEvent.StateChange) {
-      hasListener = false
-    }
-
-    OnDestroy {
       subscription?.remove()
-      subscription = null
+      hasListener = false
       updatesController = null
+      subscription = null
     }
 
     Function("getLaunchedUpdateId") {
@@ -55,31 +48,35 @@ class InterfaceDemoModule : Module(), UpdatesStateChangeListener {
     Function("getLaunchAssetPath") {
       return@Function updatesController?.launchAssetPath
     }
+
+    Function("getLastDownloadTime") {
+      return@Function lastDownloadTime
+    }
   }
 
   override fun updatesStateDidChange(event: Map<String, Any>) {
-    when (event.get("type")) {
-      "download" -> {
-        startTime = Date().time
-      }
-      "downloadCompleteWithUpdate" -> {
-        startTime?.let { lastDownloadTime = ((Date().time - it) / 1000.0)?.toFloat() }
-        startTime = null
-      }
-    }
+    updateLastDownloadTimeIfNeeded()
     if (hasListener) {
-      val payload = Bundle()
-      payload.putString("type", event["type"] as String)
-      lastDownloadTime?.let {
-        payload.putFloat("lastDownloadTime", it)
-      }
-      val manifest = event["manifest"] as? Map<*, *>
-      if (manifest != null) {
-        val manifestBundle = Bundle()
-        manifestBundle.putString("id", manifest["id"] as String)
-        payload.putBundle("manifest", manifestBundle)
-      }
-      sendEvent(InterfaceDemoEvent.StateChange, payload)
+      val demoEvent = InterfaceDemoEventData(type = event["type"] as? String ?: "")
+      sendEvent(InterfaceDemoEvent.StateChange, demoEvent.toBundle())
+    }
+  }
+
+  private fun updateLastDownloadTimeIfNeeded() {
+    val context = subscription?.getContext() as? UpdatesNativeInterfaceStateContext ?: return
+    val startTime = context.downloadStartTime ?: return
+    val finishTime = context.downloadFinishTime ?: return
+    lastDownloadTime = (finishTime.time - startTime.time).toDouble() / 1000.0
+  }
+}
+
+data class InterfaceDemoEventData(val type: String) {
+  val timestamp: Long = System.currentTimeMillis()
+
+  fun toBundle(): Bundle {
+    return Bundle().apply {
+      putString("type", type)
+      putLong("timestamp", timestamp)
     }
   }
 }
