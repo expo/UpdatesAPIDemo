@@ -11,6 +11,7 @@ import {
   currentlyRunningDescription,
   nativeInterfaceDescription,
   usePersistentDate,
+  errorDescription,
 } from "../utils/updates"
 import { CheckInterval, checkIntervalFromSettings, useSettings } from "../utils/useSettings"
 import { useLastNativeInterfaceStateChange } from "../../modules/interface-demo"
@@ -23,8 +24,9 @@ enum CustomUpdateChannels {
 const expoVariant = "default"
 
 export function UpdatesApiDemoScreen() {
+  const updatesSystem = useUpdates()
   const { currentlyRunning, isChecking, isDownloading, lastCheckForUpdateTimeSinceRestart } =
-    useUpdates()
+    updatesSystem
 
   const [showSettings, setShowSettings] = useState(false)
 
@@ -149,7 +151,10 @@ export function UpdatesApiDemoScreen() {
       <ExpoDemoCard
         variant={expoVariant}
         title={currentlyRunningTitle(currentlyRunning)}
-        description={currentlyRunningDescription(currentlyRunning, lastCheckForUpdateTime)}
+        description={
+          currentlyRunningDescription(currentlyRunning, lastCheckForUpdateTime) +
+          errorDescription(updatesSystem)
+        }
         actions={[
           {
             label: showSettings ? "Hide monitor options" : "Show monitor options",
