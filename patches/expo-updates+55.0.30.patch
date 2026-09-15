@@ -58,7 +58,7 @@ index 55a193a..77496fe 100644
  
          is IUpdatesController.FetchUpdateResult.Failure -> {
 diff --git a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/loader/FileDownloader.kt b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/loader/FileDownloader.kt
-index c1c50e7..67beb19 100644
+index c1c50e7..c199851 100644
 --- a/node_modules/expo-updates/android/src/main/java/expo/modules/updates/loader/FileDownloader.kt
 +++ b/node_modules/expo-updates/android/src/main/java/expo/modules/updates/loader/FileDownloader.kt
 @@ -1,6 +1,7 @@
@@ -100,7 +100,7 @@ index c1c50e7..67beb19 100644
    suspend fun downloadRemoteUpdate(
      extraHeaders: JSONObject?
    ): UpdateResponse {
-@@ -659,7 +684,7 @@ class FileDownloader(
+@@ -659,9 +684,14 @@ class FileDownloader(
  
        if (!response.isSuccessful) {
          val message = "Remote update request not successful"
@@ -108,8 +108,15 @@ index c1c50e7..67beb19 100644
 +        val underlyingError = IOException(describeUnsuccessfulResponse(response))
          logger.error(message, underlyingError, UpdatesErrorCode.UpdateFailedToLoad)
          throw IOException(message, underlyingError)
++      } else {
++        val message = "Remote update request not successful"
++        val syntheticError = IOException("HTTP 555: artificial message from synthetic error")
++        logger.error(message, syntheticError, UpdatesErrorCode.UpdateFailedToLoad)
++        throw IOException(message, syntheticError)
        }
-@@ -927,6 +952,8 @@ class FileDownloader(
+ 
+       return parseRemoteUpdateResponse(response)
+@@ -927,6 +957,8 @@ class FileDownloader(
    }
  
    companion object {
