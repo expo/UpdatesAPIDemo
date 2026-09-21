@@ -13,7 +13,7 @@
         "buildConfiguration": "Debug",
         "simulator": true
       },
-      "channel": "development"
+      "channel": "main"
     },
     "preview": {
       "extends": "production",
