@@ -7,32 +7,21 @@
     "runtimeVersion": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/app-icon-all.png",
-    "splash": {
-      "image": "./assets/images/splash-logo-all.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#191015"
-    },
     "updates": {
-      "assetPatternsToBeBundled": [
-        "app/includedImages/*"
-      ],
+      "assetPatternsToBeBundled": ["app/includedImages/*"],
+      "disableAntiBrickingMeasures": false,
       "enableBsdiffPatchSupport": true,
       "requestHeaders": {
         "expo-channel-name": "main"
-      }
+      },
+      "useNativeDebug": true
     },
-    "jsEngine": "hermes",
     "android": {
       "icon": "./assets/images/app-icon-android-legacy.png",
       "package": "com.updatesapidemo",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/app-icon-android-adaptive-foreground.png",
         "backgroundImage": "./assets/images/app-icon-android-adaptive-background.png"
-      },
-      "splash": {
-        "image": "./assets/images/splash-logo-android-universal.png",
-        "resizeMode": "contain",
-        "backgroundColor": "#191015"
       }
     },
     "ios": {
@@ -41,13 +30,7 @@
       },
       "icon": "./assets/images/app-icon-ios.png",
       "supportsTablet": true,
-      "bundleIdentifier": "com.updatesapidemo",
-      "splash": {
-        "image": "./assets/images/splash-logo-ios-mobile.png",
-        "tabletImage": "./assets/images/splash-logo-ios-tablet.png",
-        "resizeMode": "contain",
-        "backgroundColor": "#191015"
-      }
+      "bundleIdentifier": "com.updatesapidemo"
     },
     "extra": {
       "criticalIndex": 0,
@@ -56,7 +39,26 @@
     "plugins": [
       "expo-localization",
       "expo-build-properties",
-      "expo-splash-screen",
+      [
+        "expo-splash-screen",
+        {
+          "ios": {
+            "splash": {
+              "image": "./assets/images/splash-logo-ios-mobile.png",
+              "tabletImage": "./assets/images/splash-logo-ios-tablet.png",
+              "resizeMode": "contain",
+              "backgroundColor": "#191015"
+            }
+          },
+          "android": {
+            "splash": {
+              "image": "./assets/images/splash-logo-android-universal.png",
+              "resizeMode": "contain",
+              "backgroundColor": "#191015"
+            }
+          }
+        }
+      ],
       "expo-status-bar",
       "expo-font"
     ],
