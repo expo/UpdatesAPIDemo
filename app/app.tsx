@@ -13,6 +13,7 @@
 import "./i18n"
 import "./utils/ignoreWarnings"
 import { useFonts } from "expo-font"
+import { useObserve } from "expo-observe"
 import React, { useEffect } from "react"
 import { initialWindowMetrics, SafeAreaProvider } from "react-native-safe-area-context"
 import { UpdatesApiDemoScreen } from "./screens"
@@ -31,6 +32,7 @@ function App(props: AppProps) {
   const { hideSplashScreen } = props
 
   const [areFontsLoaded, error] = useFonts(customFontsToLoad)
+  const { markInteractive } = useObserve()
 
   // Before we show the app, we have to wait for our state to be ready.
   // In the meantime, don't render anything. This will be the background
@@ -41,9 +43,12 @@ function App(props: AppProps) {
 
   useEffect(() => {
     if (areFontsLoaded || error) {
-      setTimeout(hideSplashScreen, 500)
+      setTimeout(() => {
+        hideSplashScreen()
+        markInteractive()
+      }, 500)
     }
-  }, [areFontsLoaded, error])
+  }, [areFontsLoaded, error, hideSplashScreen, markInteractive])
 
   if (!areFontsLoaded && !error) return null
 
