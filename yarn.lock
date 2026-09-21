@@ -4753,6 +4753,13 @@ expect@^29.0.0, expect@^29.7.0:
     jest-message-util "^29.7.0"
     jest-util "^29.7.0"
 
+expo-app-metrics@~58.0.4:
+  version "58.0.4"
+  resolved "https://registry.yarnpkg.com/expo-app-metrics/-/expo-app-metrics-58.0.4.tgz#e2d8078427f3fe41a813c08028d83b4611cd543f"
+  integrity sha512-9OzSDoULVtbLAE+y+snMSfBRFdCpXrYMz9eYO9SLN9OXoEIMimq2QACUWMaVkYe88p9ia9/s1M5RpctwxSyk7w==
+  dependencies:
+    expo-updates-interface "~58.0.0"
+
 expo-application@~58.0.1:
   version "58.0.1"
   resolved "https://registry.yarnpkg.com/expo-application/-/expo-application-58.0.1.tgz#919876145a0d0eb8c500174e0f38c9be7ac7fc7d"
@@ -4878,6 +4885,14 @@ expo-modules-jsi@~58.0.3:
   version "58.0.3"
   resolved "https://registry.yarnpkg.com/expo-modules-jsi/-/expo-modules-jsi-58.0.3.tgz#f9906baee0a2753900bbbf9484ac4f9983d82719"
   integrity sha512-zAnhZG5fEkfgEdC2JbmHy7wg8NQ8d+fsXk6jUPimOAsHmBgY03QW13QTVPpXD9xbY54aEXq4kVacj9cb7FtHvw==
+
+expo-observe@~58.0.6:
+  version "58.0.6"
+  resolved "https://registry.yarnpkg.com/expo-observe/-/expo-observe-58.0.6.tgz#2f2f8cccc4dc525ba2235b1c9fc83ea37d0fdfae"
+  integrity sha512-Vyb3NwG8Z+lF3H5CVlaehzmOZyB3Sv9y1OjeupZaeeqd4/ve7hwFdgy9or+aD5VYhBz1zxFx9tVmeNKqRgCvKg==
+  dependencies:
+    expo-app-metrics "~58.0.4"
+    expo-eas-client "~58.0.0"
 
 expo-server@^58.0.1:
   version "58.0.1"
